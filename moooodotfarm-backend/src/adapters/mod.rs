@@ -40,7 +40,7 @@ struct TomlConfig {
 
 #[derive(Deserialize)]
 struct TomlCow {
-    url: String,
+    name: String,
     character: String,
 }
 
@@ -53,7 +53,7 @@ impl TryFrom<TomlConfig> for Config {
             .into_iter()
             .map(|toml_cow| {
                 let character = toml_cow.character.try_into()?;
-                let name = domain::Name::new(toml_cow.url)?;
+                let name = domain::Name::new(toml_cow.name)?;
                 Cow::new(name, character)
             })
             .collect::<Result<Vec<_>>>()?;

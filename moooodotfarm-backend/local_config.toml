@@ -3,5 +3,5 @@ environment = "development"
 database_path = "./_data/db"
 
 [[cows]]
-url = "https://moooo.farm/cow.txt"
+name = "https://moooo.farm/cow.txt"
 character = "brave"
