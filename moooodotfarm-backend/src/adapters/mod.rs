@@ -3,6 +3,7 @@ pub mod database;
 use crate::app;
 use crate::app::{ApplicationHandlerCallResult, Herd};
 use crate::config::{Config, Environment};
+use crate::domain;
 use crate::domain::Cow;
 use crate::domain::time::Duration;
 use crate::errors::Result;
@@ -34,7 +35,13 @@ struct TomlConfig {
     address: String,
     environment: String,
     database_path: String,
-    cows: Vec<String>,
+    cows: Vec<TomlCow>,
+}
+
+#[derive(Deserialize)]
+struct TomlCow {
+    url: String,
+    character: String,
 }
 
 impl TryFrom<TomlConfig> for Config {
@@ -44,7 +51,11 @@ impl TryFrom<TomlConfig> for Config {
         let cows = value
             .cows
             .into_iter()
-            .map(Cow::new)
+            .map(|toml_cow| {
+                let character = toml_cow.character.try_into()?;
+                let name = domain::Name::new(toml_cow.url)?;
+                Cow::new(name, character)
+            })
             .collect::<Result<Vec<_>>>()?;
         Config::new(
             value.address,
@@ -63,6 +74,18 @@ impl TryFrom<String> for Environment {
             "production" => Ok(Environment::Production),
             "development" => Ok(Environment::Development),
             other => Err(anyhow!("invalid environment: {}", other).into()),
+        }
+    }
+}
+
+impl TryFrom<String> for crate::domain::Character {
+    type Error = crate::errors::Error;
+
+    fn try_from(value: String) -> std::result::Result<Self, Self::Error> {
+        match value.as_str() {
+            "brave" => Ok(crate::domain::Character::Brave),
+            "shy" => Ok(crate::domain::Character::Shy),
+            other => Err(anyhow!("invalid character: {}", other).into()),
         }
     }
 }
@@ -173,15 +196,20 @@ fn cow_status_as_str(status: &app::CowStatus) -> &'static str {
 mod tests {
     use super::*;
     use crate::config::Config;
+    use crate::domain::Name;
     use crate::fixtures;
 
     #[test]
     fn loads_config_from_file_successfully() -> Result<()> {
+        use crate::domain::Character;
         let expected_config = Config::new(
             "0.0.0.0:8080",
             Environment::Development,
             "/moooodotfarm.db",
-            vec![Cow::new("https://moooo.farm/cow.txt")?],
+            vec![Cow::new(
+                Name::new("https://moooo.farm/cow.txt")?,
+                Character::Brave,
+            )?],
         )?;
         let loader = ConfigLoader::new(fixtures::test_file_path(
             "src/adapters/testdata/config.toml",

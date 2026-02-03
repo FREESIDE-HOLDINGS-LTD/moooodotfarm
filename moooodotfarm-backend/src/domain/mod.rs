@@ -12,10 +12,30 @@ const COW_SUFFIX: &str = "/cow.txt";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Cow {
-    url: url::Url,
+    name: Name,
+    character: Character,
 }
 
 impl Cow {
+    pub fn new(name: Name, character: Character) -> Result<Self> {
+        Ok(Cow { name, character })
+    }
+
+    pub fn name(&self) -> &Name {
+        &self.name
+    }
+
+    pub fn character(&self) -> &Character {
+        &self.character
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Name {
+    url: url::Url,
+}
+
+impl Name {
     pub fn new(s: impl Into<String>) -> Result<Self> {
         let url = url::Url::parse(&s.into())?;
         if !url.path().ends_with(COW_SUFFIX) {
@@ -24,7 +44,7 @@ impl Cow {
                 COW_SUFFIX
             )));
         }
-        Ok(Cow { url })
+        Ok(Self { url })
     }
 
     pub fn url(&self) -> &url::Url {
@@ -34,8 +54,69 @@ impl Cow {
 
 impl Display for Cow {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.url)
+        write!(f, "{}", self.name.url())
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CensoredName {
+    url: String,
+}
+
+impl CensoredName {
+    pub fn new(cow: &Cow) -> Result<Self> {
+        if cow.character == Character::Brave {
+            return Ok(Self {
+                url: cow.name().url().to_string(),
+            });
+        }
+
+        let url = cow.name().url();
+
+        let scheme = url.scheme();
+        let host = url
+            .host_str()
+            .ok_or_else(|| Error::Unknown(anyhow!("no host in url")))?;
+        let port = url.port().map(|p| format!(":{}", p)).unwrap_or_default();
+        let path = url.path();
+
+        let last_dot_pos = host
+            .rfind('.')
+            .ok_or_else(|| Error::Unknown(anyhow!("no TLD found in host")))?;
+        let (before_tld, tld_with_dot) = host.split_at(last_dot_pos);
+
+        let censored_before: String = before_tld
+            .chars()
+            .map(|c| if c == '.' { '.' } else { '*' })
+            .collect();
+        let censored_host = format!("{}{}", censored_before, tld_with_dot);
+
+        // Censor path elements except the final /cow.txt
+        let censored_path = if path.ends_with("/cow.txt") && path.len() > 8 {
+            // There are path elements before /cow.txt
+            let before_cow = &path[..path.len() - 8]; // Remove "/cow.txt"
+            let censored_before: String = before_cow
+                .chars()
+                .map(|c| if c == '/' { '/' } else { '*' })
+                .collect();
+            format!("{}/cow.txt", censored_before)
+        } else {
+            path.to_string()
+        };
+
+        let censored_url = format!("{}://{}{}{}", scheme, censored_host, port, censored_path);
+        Ok(Self { url: censored_url })
+    }
+
+    pub fn url(&self) -> &str {
+        &self.url
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Character {
+    Brave,
+    Shy,
 }
 
 pub fn cow_is_present(s: impl Into<String>) -> bool {
@@ -56,10 +137,10 @@ impl Herd {
         if cows.is_empty() {
             return Err(Error::Unknown(anyhow!("all the cows have escaped")));
         }
-        cows.sort_by(|a, b| a.url().cmp(b.url()));
+        cows.sort_by(|a, b| a.name().url().cmp(b.name().url()));
 
         for i in 1..cows.len() {
-            if cows[i - 1].url() == cows[i].url() {
+            if cows[i - 1].name().url() == cows[i].name().url() {
                 return Err(Error::Unknown(anyhow!("duplicate cow found {}", cows[i])));
             }
         }
@@ -74,16 +155,16 @@ impl Herd {
 
 #[derive(Clone)]
 pub struct CowStatus {
-    cow: Cow,
+    name: Name,
     first_seen: Option<DateTime>,
     last_seen: Option<DateTime>,
     last_checked: Option<DateTime>,
 }
 
 impl CowStatus {
-    pub fn new(cow: Cow) -> Self {
+    pub fn new(name: Name) -> Self {
         Self {
-            cow,
+            name,
             first_seen: None,
             last_seen: None,
             last_checked: None,
@@ -91,13 +172,13 @@ impl CowStatus {
     }
 
     pub fn new_from_history(
-        cow: Cow,
+        name: Name,
         first_seen: Option<DateTime>,
         last_seen: Option<DateTime>,
         last_checked: Option<DateTime>,
     ) -> Self {
         Self {
-            cow,
+            name,
             first_seen,
             last_seen,
             last_checked,
@@ -128,8 +209,48 @@ impl CowStatus {
         self.last_checked = Some(now.clone());
     }
 
-    pub fn cow(&self) -> &Cow {
-        &self.cow
+    pub fn name(&self) -> &Name {
+        &self.name
+    }
+
+    pub fn first_seen(&self) -> Option<&DateTime> {
+        self.first_seen.as_ref()
+    }
+
+    pub fn last_seen(&self) -> Option<&DateTime> {
+        self.last_seen.as_ref()
+    }
+
+    pub fn last_checked(&self) -> Option<&DateTime> {
+        self.last_checked.as_ref()
+    }
+}
+
+#[derive(Clone)]
+pub struct CensoredCowStatus {
+    name: CensoredName,
+    first_seen: Option<DateTime>,
+    last_seen: Option<DateTime>,
+    last_checked: Option<DateTime>,
+}
+
+impl CensoredCowStatus {
+    pub fn new(
+        name: CensoredName,
+        first_seen: Option<DateTime>,
+        last_seen: Option<DateTime>,
+        last_checked: Option<DateTime>,
+    ) -> Result<Self> {
+        Ok(Self {
+            name,
+            first_seen,
+            last_seen,
+            last_checked,
+        })
+    }
+
+    pub fn name(&self) -> &CensoredName {
+        &self.name
     }
 
     pub fn first_seen(&self) -> Option<&DateTime> {
@@ -146,7 +267,7 @@ impl CowStatus {
 }
 
 pub trait Inventory {
-    fn get(&self, cow: &Cow) -> Result<Option<CowStatus>>;
+    fn get(&self, name: &Name) -> Result<Option<CowStatus>>;
     fn put(&self, status: CowStatus) -> Result<()>;
 }
 
@@ -167,15 +288,18 @@ where
         Self { herd, inventory }
     }
 
-    fn get_cow_status(&self, cow: &Cow) -> Result<CowStatus> {
-        match self.inventory.get(cow)? {
+    fn get_cow_status(&self, name: &Name) -> Result<CowStatus> {
+        match self.inventory.get(name)? {
             Some(cow_status) => Ok(cow_status),
-            None => Ok(CowStatus::new(cow.clone())),
+            None => Ok(CowStatus::new(name.clone())),
         }
     }
 
     async fn is_present(&self, cow: &Cow) -> Result<()> {
-        let cow_body = reqwest::get(cow.url().to_string()).await?.text().await?;
+        let cow_body = reqwest::get(cow.name().url().to_string())
+            .await?
+            .text()
+            .await?;
         if !cow_is_present(&cow_body) {
             return Err(Error::Unknown(anyhow!("cow is not present: {}", cow_body)));
         }
@@ -189,7 +313,7 @@ where
 {
     pub async fn update(&self) -> Result<()> {
         for cow in self.herd.cows() {
-            let mut status = self.get_cow_status(cow)?;
+            let mut status = self.get_cow_status(cow.name())?;
             if !status.should_check() {
                 continue;
             }
@@ -209,11 +333,17 @@ where
         Ok(())
     }
 
-    pub fn get_cow_statuses(&self) -> Result<Vec<CowStatus>> {
+    pub fn get_cow_statuses(&self) -> Result<Vec<CensoredCowStatus>> {
         let mut statuses = vec![];
         for cow in self.herd.cows() {
-            let status = self.get_cow_status(cow)?;
-            statuses.push(status);
+            let status = self.get_cow_status(cow.name())?;
+            let censored_status = CensoredCowStatus::new(
+                CensoredName::new(cow)?,
+                status.first_seen().cloned(),
+                status.last_seen().cloned(),
+                status.last_checked().cloned(),
+            )?;
+            statuses.push(censored_status);
         }
         Ok(statuses)
     }
@@ -236,11 +366,107 @@ mod tests {
 
     #[test]
     fn duplicate_cows_in_herd_are_detected_even_if_they_are_not_next_to_each_other() {
-        let cow1 = Cow::new("http://example.com/cow.txt").unwrap();
-        let cow2 = Cow::new("http://example.org/cow.txt").unwrap();
-        let cow3 = Cow::new("http://example.com/cow.txt").unwrap();
+        let cow1 = Cow::new(
+            Name::new("http://example.com/cow.txt").unwrap(),
+            Character::Brave,
+        )
+        .unwrap();
+        let cow2 = Cow::new(
+            Name::new("http://example.org/cow.txt").unwrap(),
+            Character::Brave,
+        )
+        .unwrap();
+        let cow3 = Cow::new(
+            Name::new("http://example.com/cow.txt").unwrap(),
+            Character::Brave,
+        )
+        .unwrap();
 
         let herd_result = Herd::new(vec![cow1, cow2, cow3]);
         assert!(herd_result.is_err());
+    }
+
+    #[test]
+    fn test_censored_name() {
+        struct CensoredNameTestCase {
+            input: &'static str,
+            character: Character,
+            expected: &'static str,
+        }
+
+        let test_cases = vec![
+            CensoredNameTestCase {
+                input: "https://example.com/cow.txt",
+                character: Character::Brave,
+                expected: "https://example.com/cow.txt",
+            },
+            CensoredNameTestCase {
+                input: "https://example.com/cow.txt",
+                character: Character::Shy,
+                expected: "https://*******.com/cow.txt",
+            },
+            CensoredNameTestCase {
+                input: "https://www.example.com/cow.txt",
+                character: Character::Brave,
+                expected: "https://www.example.com/cow.txt",
+            },
+            CensoredNameTestCase {
+                input: "https://www.example.com/cow.txt",
+                character: Character::Shy,
+                expected: "https://***.*******.com/cow.txt",
+            },
+            CensoredNameTestCase {
+                input: "https://example.com:8080/cow.txt",
+                character: Character::Brave,
+                expected: "https://example.com:8080/cow.txt",
+            },
+            CensoredNameTestCase {
+                input: "https://example.com:8080/cow.txt",
+                character: Character::Shy,
+                expected: "https://*******.com:8080/cow.txt",
+            },
+            CensoredNameTestCase {
+                input: "https://api123.example.com/cow.txt",
+                character: Character::Brave,
+                expected: "https://api123.example.com/cow.txt",
+            },
+            CensoredNameTestCase {
+                input: "https://api123.example.com/cow.txt",
+                character: Character::Shy,
+                expected: "https://******.*******.com/cow.txt",
+            },
+            CensoredNameTestCase {
+                input: "http://example.com/cow.txt",
+                character: Character::Brave,
+                expected: "http://example.com/cow.txt",
+            },
+            CensoredNameTestCase {
+                input: "http://example.com/cow.txt",
+                character: Character::Shy,
+                expected: "http://*******.com/cow.txt",
+            },
+            CensoredNameTestCase {
+                input: "https://example.com/path/to/cow.txt",
+                character: Character::Brave,
+                expected: "https://example.com/path/to/cow.txt",
+            },
+            CensoredNameTestCase {
+                input: "https://example.com/path/to/cow.txt",
+                character: Character::Shy,
+                expected: "https://*******.com/****/**/cow.txt",
+            },
+        ];
+
+        for test_case in test_cases {
+            let name = Name::new(test_case.input.to_string()).unwrap();
+            let cow = Cow::new(name, test_case.character).unwrap();
+            let censored = CensoredName::new(&cow).unwrap();
+            assert_eq!(
+                censored.url(),
+                test_case.expected,
+                "Failed for input: {}",
+                test_case.input
+            );
+        }
     }
 }

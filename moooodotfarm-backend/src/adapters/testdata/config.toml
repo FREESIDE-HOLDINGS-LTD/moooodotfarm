@@ -2,4 +2,6 @@ address = "0.0.0.0:8080"
 environment = "development"
 database_path = "/moooodotfarm.db"
 
-cows = ["https://moooo.farm/cow.txt"]
+[[cows]]
+url = "https://moooo.farm/cow.txt"
+character = "brave"
