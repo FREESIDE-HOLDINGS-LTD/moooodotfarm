@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}moooo.farm{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cream: #FDF6E3;
+            --grass: #7CB342;
+            --grass-dark: #558B2F;
+            --grass-light: #AED581;
+            --warm-brown: #A1887F;
+            --text: #4E342E;
+            --happy-green: #66BB6A;
+            --sad-red: #EF5350;
+            --unknown-gray: #BDBDBD;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--cream);
+            min-height: 100vh;
+            font-family: 'Gaegu', cursive;
+            color: var(--text);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .grass-tuft {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .grass-tuft svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .footer-grass {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            pointer-events: none;
+        }
+
+        {% block extra_styles %}{% endblock %}
+    </style>
+</head>
+<body>
+    <div id="grassContainer"></div>
+
+    {% block content %}{% endblock %}
+
+    <div class="footer-grass">
+        <svg viewBox="0 0 1200 60" preserveAspectRatio="none" width="100%" height="100%">
+            <path d="M0 60 L0 40 Q20 35, 25 20 Q28 35, 35 38 Q40 30, 50 25 Q55 35, 60 40 Q70 32, 80 28 Q85 38, 95 42 Q105 35, 115 30 Q120 40, 130 38 Q140 28, 150 22 Q155 35, 165 40 Q175 30, 185 25 Q192 38, 200 42 Q210 35, 220 32 Q228 42, 240 38 Q250 25, 260 20 Q268 35, 280 40 Q290 30, 300 28 Q308 40, 320 42 L320 60 Z" fill="var(--grass)"/>
+            <path d="M300 60 L300 42 Q320 35, 330 28 Q340 38, 350 35 Q360 25, 375 18 Q385 32, 395 38 Q405 28, 420 22 Q430 35, 440 40 Q455 30, 470 25 Q480 38, 495 42 Q510 32, 525 28 Q535 40, 550 38 Q565 25, 580 20 Q595 35, 610 40 Q625 28, 640 60 Z" fill="var(--grass-dark)"/>
+            <path d="M620 60 L620 35 Q640 28, 660 22 Q680 35, 700 38 Q720 25, 740 20 Q760 32, 780 40 Q800 30, 820 25 Q840 38, 860 42 Q880 30, 900 28 Q920 40, 940 35 Q960 22, 980 18 Q1000 35, 1020 40 Q1040 28, 1060 25 Q1080 38, 1100 42 Q1120 30, 1140 28 Q1160 40, 1180 35 L1200 40 L1200 60 Z" fill="var(--grass)"/>
+            <path d="M0 60 L0 50 Q50 45, 100 48 Q200 44, 300 50 Q400 46, 500 52 Q600 48, 700 50 Q800 46, 900 52 Q1000 48, 1100 50 Q1150 46, 1200 52 L1200 60 Z" fill="var(--grass-light)"/>
+        </svg>
+    </div>
+
+    <script>
+        const grassPositions = [
+            { left: '5%', top: '15%', width: 40, height: 50, rotate: -10 },
+            { right: '8%', top: '20%', width: 35, height: 45, rotate: 5 },
+            { left: '12%', top: '55%', width: 30, height: 40, rotate: -5 },
+            { right: '5%', top: '60%', width: 45, height: 55, rotate: 8 },
+            { left: '3%', bottom: '80px', width: 50, height: 60, rotate: 0 },
+            { right: '2%', bottom: '70px', width: 55, height: 65, rotate: -3 }
+        ];
+
+        const grassSvg = `<svg viewBox="0 0 40 50" fill="none">
+            <path d="M8 50 Q10 30, 5 10" stroke="var(--grass)" stroke-width="3" stroke-linecap="round"/>
+            <path d="M15 50 Q17 25, 20 5" stroke="var(--grass-dark)" stroke-width="3" stroke-linecap="round"/>
+            <path d="M22 50 Q20 35, 28 15" stroke="var(--grass-light)" stroke-width="3" stroke-linecap="round"/>
+        </svg>`;
+
+        const container = document.getElementById('grassContainer');
+        grassPositions.forEach(pos => {
+            const tuft = document.createElement('div');
+            tuft.className = 'grass-tuft';
+            tuft.style.cssText = `width: ${pos.width}px; height: ${pos.height}px; transform: rotate(${pos.rotate}deg);` +
+                (pos.left ? `left: ${pos.left};` : `right: ${pos.right};`) +
+                (pos.top ? `top: ${pos.top};` : `bottom: ${pos.bottom};`);
+            tuft.innerHTML = grassSvg;
+            container.appendChild(tuft);
+        });
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

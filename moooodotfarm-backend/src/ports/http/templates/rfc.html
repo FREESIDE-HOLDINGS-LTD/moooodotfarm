@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}Request For Cows{% endblock %}
+
+{% block extra_styles %}
+        .page {
+            max-width: 880px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 4rem;
+        }
+
+        .rfc-top {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            font-size: 1rem;
+            color: var(--warm-brown);
+            margin-bottom: 2rem;
+        }
+
+        .rfc-top .left,
+        .rfc-top .right {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .rfc-top .right {
+            align-items: flex-end;
+            text-align: right;
+        }
+
+        .rfc-title {
+            margin: 1.6rem 0 0.6rem;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text);
+        }
+
+        .rfc-subtitle {
+            text-align: center;
+            font-size: 1.3rem;
+            color: var(--warm-brown);
+            margin: 0 0 1.8rem;
+            font-weight: 700;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--grass-dark);
+            font-weight: 700;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            margin: 1.5rem 0 0.8rem;
+            color: var(--grass-dark);
+            font-weight: 700;
+        }
+
+        p {
+            margin: 0.8rem 0;
+            line-height: 1.6;
+        }
+
+        a {
+            color: var(--grass);
+            text-decoration: underline;
+        }
+
+        a:hover {
+            color: var(--grass-dark);
+        }
+
+        ol, ul {
+            margin: 0.8rem 0 0.8rem 1.8rem;
+            line-height: 1.6;
+        }
+
+        code {
+            background: rgba(161, 136, 127, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.95em;
+            color: var(--grass-dark);
+        }
+
+        pre {
+            background: white;
+            border: 2px solid var(--grass-light);
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        pre code {
+            background: transparent;
+            padding: 0;
+            color: var(--text);
+        }
+
+        .rfc-abstract {
+            border: 3px solid var(--grass);
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem 1.8rem;
+            margin: 1.6rem 0;
+            box-shadow: 0 4px 12px rgba(93, 64, 55, 0.08);
+        }
+
+        .rfc-abstract-title {
+            font-weight: 700;
+            margin: 0 0 0.8rem;
+            text-transform: uppercase;
+            color: var(--grass-dark);
+            font-size: 1.2rem;
+        }
+
+        .footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid var(--grass-light);
+            font-size: 1rem;
+            color: var(--warm-brown);
+            text-align: center;
+        }
+
+        strong {
+            color: var(--grass-dark);
+        }
+{% endblock %}
+
+{% block content %}
+    <div class="page">
+        <div class="rfc-top">
+            <div class="left">
+                <div>Cow Working Group</div>
+                <div>Request for Cows</div>
+                <div>Category: Standards Track</div>
+            </div>
+            <div class="right">
+                <div>moooo.farm</div>
+                <div>February 2026</div>
+            </div>
+        </div>
+
+        <div class="rfc-title">Serving cow.txt Over HTTP</div>
+        <div class="rfc-subtitle">A Universal Requirement for All Internet Servers (very round response)</div>
+
+        <section class="rfc-abstract">
+            <div class="rfc-abstract-title">Abstract</div>
+            <p>
+                This document establishes the requirement for all HTTP servers on the Internet to serve
+                <code>cow.txt</code>. Every web-accessible server <strong>MUST</strong> serve a
+                <code>cow.txt</code> file that is byte-for-byte identical to the canonical reference.
+                The resource <strong>MUST</strong> be hosted at <code>/cow.txt</code> unless technical
+                constraints make this impossible, in which case alternative paths <strong>MAY</strong>
+                be used as a last resort.
+            </p>
+        </section>
+
+        <h2>1. Introduction</h2>
+        <p>
+            This RFC establishes a universal requirement for all HTTP servers on the Internet.
+            Every server <strong>MUST</strong> serve the <code>cow.txt</code> resource, a simple
+            ASCII art text file intended to be fetched by both humans and automated clients.
+            This document standardizes the minimal behavior required to ensure universal compliance
+            and interoperability across all Internet-connected web servers.
+        </p>
+        <p>
+            The requirement applies to all publicly accessible HTTP/HTTPS servers without exception.
+        </p>
+
+        <h2>2. Conventions and Terminology</h2>
+        <p>
+            The key words <code>MUST</code>, <code>SHOULD</code>, and <code>MAY</code> are to be
+            interpreted as described in RFC 2119.
+        </p>
+
+        <h2>3. Universal Requirement</h2>
+        <p>
+            All HTTP servers on the Internet <strong>MUST</strong> serve <code>cow.txt</code>.
+        </p>
+        <p>
+            A server <strong>MUST</strong> return a response body that is byte-for-byte identical to
+            the canonical reference file provided in Appendix A of this document.
+        </p>
+        <p>
+            Servers <strong>MUST</strong> return <code>cow.txt</code> content without modification.
+        </p>
+
+        <h3>3.1 Location</h3>
+        <p>
+            The resource <strong>MUST</strong> be served at the root path <code>/cow.txt</code>.
+        </p>
+        <p>
+            Alternative paths such as <code>/under/some/other/path/cow.txt</code> <strong>MAY</strong>
+            only be used when technical constraints make serving at <code>/cow.txt</code> impossible.
+            Such constraints include but are not limited to: hosting platform limitations, legacy
+            system incompatibilities, or security policies that prevent root-level file serving.
+            In all cases where <code>/cow.txt</code> is possible, it <strong>MUST</strong> be used.
+        </p>
+
+        <h3>3.2 Example</h3>
+        <pre><code>GET /cow.txt HTTP/1.1
+Host: example.com
+Accept: text/plain
+</code></pre>
+
+        <h2>4. HTTP Considerations</h2>
+        <p>
+            Implementations SHOULD return <code>Content-Type: text/plain; charset=utf-8</code> and
+            MAY provide caching headers appropriate to the deployment.
+        </p>
+
+        <h2>5. Error Handling</h2>
+        <p>
+            If the resource is unavailable, servers SHOULD return an appropriate HTTP status code.
+            The response body MAY include a human-readable message.
+        </p>
+
+        <h2>6. Security Considerations</h2>
+        <p>
+            Servers MUST NOT include secrets or dynamic data in the response. The response MUST
+            remain identical to the reference file.
+        </p>
+
+        <h2>7. IANA Considerations</h2>
+        <p>None.</p>
+
+        <h2>8. References</h2>
+        <ol>
+            <li>RFC 2119: Key words for use in RFCs to Indicate Requirement Levels.</li>
+        </ol>
+
+        <h2>Appendix A. Reference cow.txt</h2>
+        <p>
+            The following is the canonical <code>cow.txt</code> content. Servers MUST return this
+            content byte-for-byte.
+        </p>
+        <pre><code>
+
+
+
+
+
+                                                                            ..........................
+                                                              ....*o|||||||8#@@@@@@@@@@@@@@@@@@@@@@@###&|o:_..
+                                                    ..*:o|||&8##@###8888888######@#@###########################|*...
+                                             .:o|||8#####8888|:::**.     *&########################@@################&o_
+                                        .*o&8###@#8&o*_.                :###@##############@########################@@##&o_
+                                     .*o8########&                     :##@#@##############@############################@###|_
+                                 .*o|8##########8o                    .#######################################################&o_
+                   *&##|_     ..*&##8&o*|88888|_                      _#######################################@##################|.
+                  *#####&  *&######&o_..*o|o:_       .&##o            _###########################################################&_
+                 _##8*##8 .|88|:::|#######8###8|*:_ .&#@@8            _##@@@########################################################&_
+                 _#@8_##8_         *8#8|*_ _:|#####&&####8            .&##############################################################|
+                 _#@8.|##8_                   _::o###8&##8             .|##@############################8###########################@@#|_
+                 *###o.|88o                 ..*&####|..##&               _|##########################8|_ .|#############################8
+               *|###|_                   ._&####8|*_   _*_                  _::&8888888888888888|::*_      .|##@####@@@##################|
+             *&###|_     _:_         .&88###8|*_       .....                                                 .|#####@@@##################8
+            .##@#&      _##&   .|##o _#@@#@#|       .|#######&:_                                               _|###@####################8
+           .:8##8o   _o:*&##|   *##8_.&@@##@#|   _::o8#8|::|#####|_                                              _|#################88###8
+          .&##&*_   *###o_###|  .|##8*&##|*###o _###8####8|_ _:|###|_           .*o|||o:_                          _:::&8888888888|_  _##8
+          .###|_.  _###o  *###|*&#######8  *##8 .##8_ _:|###|_  _|###|_       .&########o                                             _##&
+           _|####8|&##8:_  _|#########88o  .##8  *##&    _|###o   .|###o      .#########|                                            .o##o
+             o#8|*:#@@###o   _:::*__*_     _##8_ _##8_     _&##|_   *##8_      *8#####8|_  .*oo:_                                    o##|
+            *###o.&#####&             _oo* .8##& .8##8_     .|##&    o##&        _::::_.*o|8######|_                                .##8.
+           _###&o&##8_:*_            .###& .###|_&#####|     _##8   :###o        *ooo&#########@#@#&                            ....:##&
+           .|8||###&.                 _**_ .###88##|*&###|*._&##& *|##8_      *o&####@@####@@######&                 .*o||||||&#######8_
+              *&###o                        _|88##8_  _:8######|*:###|_      _##################88|_               *&#################&
+             *#####o  *&8o                      *##&     _:::*_.&##|_        _#@##############8_                  :##################8*
+            .###&##8_.|88o   *&8o               _@@&           .###|         .&####@#########|_                  .####@###@@########8*
+            _##&.|###|_.... .|88o               _##8*  *&###|_  *###o          _:&88######8|_               .*o|||##################o
+            _##8_ _|########|_                .*o8####&#@@#@##o  *#@8                _*:*.                .&###@###################|
+            .|##&   _:::::&##&             .*&##############@#8_ .###o                                    _#@####################|_
+             .&##|_      .&##8_         *o&####################8_ *##&                                    .&#####@@############8*
+              .|##8_.&###&####8_       _########################8**##&                                     _##################|_
+               .&###&##888888##8_      .|88######@###########|*######o                                    _|8###############|_
+               .&#####o      *###|_        _::::::*o##8**o##8 .|###8o                                   .&##@#############&*
+               .|####o        _|###|_              _##8.*&##&   _*_                                     .#################|
+                  _*_           _|###|_..          .|#####8|_                                            *&#@#########8###&
+                                  *#######&|o:_... ..*:::*.                                   ......._:o&8####888&o:#####8_
+                                  _###|&888#####@#####&|||o:_........................._:o||||8##@@@@####8|:*_       _:::*_
+                                  .|#@###o  _:::o#@#888######@@@@@@@@@@@@@@@@@@@@@@@@#####888|::::::**_
+                                    _::*_       :##&   *&8|_:::::::::::::::::::::::::**_
+                                               .###8||&##8o
+                                                _|888888|_
+
+
+
+
+
+
+
+
+</code></pre>
+
+        <div class="footer">
+            This document is a mandatory Internet standard and may be updated without notice.
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,7 @@
+address = "0.0.0.0:8081"
+environment = "development"
+database_path = "./_data/db"
+
+cows = [
+    "https://moooo.farm/cow.txt"
+]

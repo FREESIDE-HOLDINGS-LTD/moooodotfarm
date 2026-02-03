@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}moooooonitoring the cow.txt herd{% endblock %}
+
+{% block extra_styles %}
+        .header {
+            text-align: center;
+            padding: 3rem 1rem 2rem;
+            position: relative;
+        }
+
+        .cow-hero {
+            margin: 0 auto 1rem;
+            width: 180px;
+            height: auto;
+            display: block;
+            animation: gentle-bob 3s ease-in-out infinite;
+            image-rendering: pixelated;
+        }
+
+        @keyframes gentle-bob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .site-subtitle {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--warm-brown);
+            margin-bottom: 1.5rem;
+        }
+
+        .links {
+            a {
+                display: inline-block;
+                background: var(--grass);
+                color: white;
+                padding: 0.6rem 1.5rem;
+                margin: 0.3rem;
+                border-radius: 30px;
+                text-decoration: none;
+                font-size: 1.2rem;
+                font-weight: 700;
+                transition: all 0.2s ease;
+                box-shadow: 0 4px 0 var(--grass-dark);
+            }
+
+            a:hover {
+                 transform: translateY(2px);
+                 box-shadow: 0 2px 0 var(--grass-dark);
+                 background: var(--grass-dark);
+            }
+        }
+
+        .main-content {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+            position: relative;
+        }
+
+        .herd-subtitle {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--warm-brown);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .cow-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .cow-item {
+            background: white;
+            border-radius: 16px;
+            padding: 1rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 2px 8px rgba(93, 64, 55, 0.08);
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .cow-item:hover {
+            transform: translateX(4px);
+            border-color: var(--grass-light);
+            box-shadow: 0 4px 12px rgba(93, 64, 55, 0.12);
+        }
+
+        .cow-icon {
+            width: 48px;
+            height: 36px;
+            flex-shrink: 0;
+        }
+
+        .cow-icon img {
+            width: 100%;
+            height: auto;
+            image-rendering: pixelated;
+        }
+
+        .cow-icon.inactive img {
+            filter: grayscale(100%) opacity(0.5);
+        }
+
+        .cow-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .cow-name {
+            font-size: 1.1rem;
+            color: var(--text);
+            word-break: break-all;
+            text-decoration: none;
+            display: block;
+        }
+
+        .cow-name:hover {
+            color: var(--grass-dark);
+        }
+
+        .cow-meta {
+            font-size: 0.9rem;
+            color: var(--warm-brown);
+            margin-top: 0.2rem;
+        }
+
+        .status-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .status-indicator.happily-grazing {
+            background: var(--happy-green);
+            box-shadow: 0 0 8px rgba(102, 187, 106, 0.5);
+        }
+
+        .status-indicator.happily-grazing::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: var(--happy-green);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0; }
+        }
+
+        .status-indicator.ran-away {
+            background: var(--sad-red);
+        }
+
+        .status-indicator.have-not-checked-yet {
+            background: var(--unknown-gray);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--warm-brown);
+        }
+
+        .empty-state .cow-icon {
+            width: 80px;
+            height: 60px;
+            margin: 0 auto 1rem;
+            opacity: 0.5;
+        }
+
+        .legend {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+            justify-content: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            color: var(--warm-brown);
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.happily-grazing { background: var(--happy-green); }
+        .legend-dot.ran-away { background: var(--sad-red); }
+        .legend-dot.have-not-checked-yet { background: var(--unknown-gray); }
+
+        @media (max-width: 600px) {
+            .cow-hero { width: 150px; }
+            .cow-item { padding: 0.8rem 1rem; }
+            .cow-icon { width: 40px; height: 30px; }
+        }
+{% endblock %}
+
+{% block content %}
+    <header class="header">
+        <img src="/cow.png" alt="a very round cow" class="cow-hero">
+        <p class="site-subtitle">moooooonitoring the cow.txt herd</p>
+        <ul class="links">
+            <a href="/rfc">read the RFC</a>
+            <a href="https://github.com/FREESIDE-HOLDINGS-LTD/moooodotfarm/issues/new?template=please-add-my-cows-to-the-herd.md">report a new cow</a>
+        </ul>
+    </header>
+
+    <main class="main-content">
+        <p class="herd-subtitle">all known cow.txt files and their status</p>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-dot happily-grazing"></div>
+                <span>happily grazing</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot ran-away"></div>
+                <span>ran away</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot have-not-checked-yet"></div>
+                <span>wasn't checked yet</span>
+            </div>
+        </div>
+
+        <ul class="cow-list" id="cowList">
+            {% for cow in cows %}
+                <li class="cow-item">
+                    <div class="cow-icon">
+                        <img src="/cow.png" alt="cow">
+                    </div>
+                    <div class="cow-info">
+                        <div class="cow-name">{{ cow.name }}</div>
+                        <div class="cow-meta">last seen: {{ cow.last_seen }}</div>
+                    </div>
+                    <div class="status-indicator {{ cow.status }}"></div>
+                </li>
+            {% else %}
+                <div class="empty-state">
+                    <div class="cow-icon inactive"><img src="/cow.png" alt="cow"></div>
+                    <p>No cows in the herd yet...</p>
+                    <p>Add some cow.txt files to get started!</p>
+                </div>
+            {% endfor %}
+        </ul>
+    </main>
+{% endblock %}

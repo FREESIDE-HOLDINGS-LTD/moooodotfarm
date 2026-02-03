@@ -1,0 +1,34 @@
+# Ignore build artifacts
+target/
+**/target/
+
+# Ignore git
+.git/
+.gitignore
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignore test data
+**/testdata/
+
+# Ignore local config files
+local_config.toml
+
+# Ignore documentation
+README.md
+*.md
+
+# Ignore CI/CD
+.github/
+
+# Ignore logs
+*.log
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
