@@ -188,12 +188,24 @@ struct TemplateCow {
 
 impl From<&app::Cow> for TemplateCow {
     fn from(value: &app::Cow) -> Self {
+        use crate::domain::time::{DateTime, Duration};
+
+        let last_seen_str = value
+            .last_seen()
+            .map(|v| {
+                let now = DateTime::now();
+                let duration = &now - v;
+                if duration < Duration::new_from_hours(2) {
+                    "very recently".to_string()
+                } else {
+                    v.ago()
+                }
+            })
+            .unwrap_or_else(|| "never".to_string());
+
         Self {
             name: value.name().url().to_string(),
-            last_seen: value
-                .last_seen()
-                .map(|v| v.ago())
-                .unwrap_or_else(|| "never".to_string()),
+            last_seen: last_seen_str,
             status: value.status().into(),
         }
     }
