@@ -54,6 +54,31 @@
             pointer-events: none;
         }
 
+        .back-link-container {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            background: var(--grass);
+            color: white;
+            padding: 0.5rem 1.2rem;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 0 var(--grass-dark);
+        }
+
+        .back-link:hover {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 var(--grass-dark);
+            background: var(--grass-dark);
+            color: white;
+        }
+
         {% block extra_styles %}{% endblock %}
     </style>
 </head>
