@@ -56,7 +56,7 @@ impl Server {
         let app = Router::new()
             .route("/", get(handle_get_index::<D>))
             .route("/rfc", get(handle_get_rfc))
-            .route("/report", get(handle_get_report))
+            .route("/new", get(handle_get_new))
             .route("/metrics", get(handle_get_metrics::<D>))
             .route("/api/herd", get(handle_get_herd::<D>))
             .fallback(handle_static)
@@ -90,8 +90,8 @@ async fn handle_get_rfc() -> std::result::Result<Html<String>, AppError> {
     Ok(Html(template.render()?))
 }
 
-async fn handle_get_report() -> std::result::Result<Html<String>, AppError> {
-    let template = ReportTemplate {};
+async fn handle_get_new() -> std::result::Result<Html<String>, AppError> {
+    let template = NewTemplate {};
     Ok(Html(template.render()?))
 }
 
@@ -181,8 +181,8 @@ struct IndexTemplate {
 struct RfcTemplate {}
 
 #[derive(Template)]
-#[template(path = "report.html")]
-struct ReportTemplate {}
+#[template(path = "new.html")]
+struct NewTemplate {}
 
 struct TemplateCowName {
     name: String,
