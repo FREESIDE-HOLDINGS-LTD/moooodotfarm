@@ -161,7 +161,7 @@
 
         <h2>2. Conventions and Terminology</h2>
         <p>
-            The key words <code>MUST</code>, <code>SHOULD</code>, and <code>MAY</code> are to be
+            The key words <strong>MUST</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are to be
             interpreted as described in RFC 2119.
         </p>
 
@@ -197,19 +197,19 @@ Accept: text/plain
 
         <h2>4. HTTP Considerations</h2>
         <p>
-            Implementations SHOULD return <code>Content-Type: text/plain; charset=utf-8</code> and
-            MAY provide caching headers appropriate to the deployment.
+            Implementations <strong>SHOULD</strong> return <code>Content-Type: text/plain; charset=utf-8</code> and
+            <strong>MAY</strong> provide caching headers appropriate to the deployment.
         </p>
 
         <h2>5. Error Handling</h2>
         <p>
-            If the resource is unavailable, servers SHOULD return an appropriate HTTP status code.
-            The response body MAY include a human-readable message.
+            If the resource is unavailable, servers <strong>SHOULD</strong> return an appropriate HTTP status code.
+            The response body <strong>MAY</strong> include a human-readable message.
         </p>
 
         <h2>6. Security Considerations</h2>
         <p>
-            Servers MUST NOT include secrets or dynamic data in the response. The response MUST
+            Servers <strong>MUST NOT</strong> include secrets or dynamic data in the response. The response <strong>MUST</strong>
             remain identical to the reference file.
         </p>
 
@@ -223,7 +223,7 @@ Accept: text/plain
 
         <h2>Appendix A. Reference cow.txt</h2>
         <p>
-            The following is the canonical <code>cow.txt</code> content. Servers MUST return this
+            The following is the canonical <code>cow.txt</code> content. Servers <strong>MUST</strong> return this
             content byte-for-byte.
         </p>
         <pre><code>
