@@ -10,6 +10,8 @@ const COW_BODY: &str = include_str!("../ports/http/static/cow.txt");
 
 const COW_SUFFIX: &str = "/cow.txt";
 
+static CHECK_COW_IF_NOT_CHECKED_FOR_HOURS: u64 = 2;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Cow {
     name: VisibleName,
@@ -203,7 +205,7 @@ impl CowStatus {
     pub fn should_check(&self) -> bool {
         if let Some(last_checked) = &self.last_checked {
             let now = DateTime::now();
-            return &now - last_checked > Duration::new_from_hours(2);
+            return &now - last_checked > Duration::new_from_hours(CHECK_COW_IF_NOT_CHECKED_FOR_HOURS);
         }
         true
     }
