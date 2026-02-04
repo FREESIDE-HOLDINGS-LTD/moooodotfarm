@@ -179,11 +179,11 @@
 
         <h3>3.1 Location</h3>
         <p>
-            The resource <strong>MUST</strong> be served at the root path <code>/cow.txt</code>.
+            The resource <strong>MUST</strong> be served at the root path <code>/cow.txt</code> if possible.
         </p>
         <p>
-            Alternative paths such as <code>/under/some/other/path/cow.txt</code> <strong>MAY</strong>
-            only be used when technical constraints make serving at <code>/cow.txt</code> impossible.
+            Alternative paths such as <code>/under/some/other/path/cow.txt</code> <strong>SHOULD NOT</strong>
+            be used unless technical constraints make serving at <code>/cow.txt</code> impossible.
             Such constraints include but are not limited to: hosting platform limitations, legacy
             system incompatibilities, or security policies that prevent root-level file serving.
             In all cases where <code>/cow.txt</code> is possible, it <strong>MUST</strong> be used.
