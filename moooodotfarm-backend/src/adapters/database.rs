@@ -1,6 +1,6 @@
 use crate::domain;
 use crate::domain::time::DateTime;
-use crate::domain::{CowStatus, Name};
+use crate::domain::{CowStatus, VisibleName};
 use crate::errors::Result;
 use anyhow::Context;
 use redb;
@@ -26,7 +26,7 @@ impl Database {
 }
 
 impl domain::Inventory for Database {
-    fn get(&self, name: &Name) -> Result<Option<CowStatus>> {
+    fn get(&self, name: &VisibleName) -> Result<Option<CowStatus>> {
         let db = self.db.lock().unwrap();
 
         let read_txn = db.begin_read()?;
@@ -87,7 +87,7 @@ impl TryInto<CowStatus> for PersistedCowStatus {
 
     fn try_into(self) -> std::result::Result<CowStatus, Self::Error> {
         Ok(CowStatus::new_from_history(
-            Name::new(&self.cow)?,
+            VisibleName::new(&self.cow)?,
             match self.first_seen {
                 Some(dt_str) => Some(dt_str.try_into()?),
                 None => None,
@@ -104,8 +104,8 @@ impl TryInto<CowStatus> for PersistedCowStatus {
     }
 }
 
-impl From<&Name> for String {
-    fn from(value: &Name) -> Self {
+impl From<&VisibleName> for String {
+    fn from(value: &VisibleName) -> Self {
         value.url().to_string()
     }
 }

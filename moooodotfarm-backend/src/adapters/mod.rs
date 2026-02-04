@@ -53,7 +53,7 @@ impl TryFrom<TomlConfig> for Config {
             .into_iter()
             .map(|toml_cow| {
                 let character = toml_cow.character.try_into()?;
-                let name = domain::Name::new(toml_cow.name)?;
+                let name = domain::VisibleName::new(toml_cow.name)?;
                 Cow::new(name, character)
             })
             .collect::<Result<Vec<_>>>()?;
@@ -196,7 +196,7 @@ fn cow_status_as_str(status: &app::CowStatus) -> &'static str {
 mod tests {
     use super::*;
     use crate::config::Config;
-    use crate::domain::Name;
+    use crate::domain::VisibleName;
     use crate::fixtures;
 
     #[test]
@@ -207,7 +207,7 @@ mod tests {
             Environment::Development,
             "/moooodotfarm.db",
             vec![Cow::new(
-                Name::new("https://moooo.farm/cow.txt")?,
+                VisibleName::new("https://moooo.farm/cow.txt")?,
                 Character::Brave,
             )?],
         )?;

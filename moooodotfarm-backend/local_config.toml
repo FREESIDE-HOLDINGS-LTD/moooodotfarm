@@ -5,3 +5,7 @@ database_path = "./_data/db"
 [[cows]]
 name = "https://moooo.farm/cow.txt"
 character = "brave"
+
+[[cows]]
+name = "https://bark.farm/cow.txt"
+character = "shy"

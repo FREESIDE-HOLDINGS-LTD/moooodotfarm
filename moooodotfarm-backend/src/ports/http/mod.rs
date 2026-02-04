@@ -128,20 +128,20 @@ where
     Ok(encoder.encode_to_string(&families)?)
 }
 
-async fn handle_get_herd<D>(State(deps): State<D>) -> std::result::Result<Json<Herd>, AppError>
+async fn handle_get_herd<D>(State(deps): State<D>) -> std::result::Result<Json<APIHerd>, AppError>
 where
     D: Deps,
 {
     let herd = deps.get_herd_handler().get_herd()?;
-    Ok(Json(Herd::from(&herd)))
+    Ok(Json(APIHerd::from(&herd)))
 }
 
 #[derive(Serialize)]
-struct Herd {
-    cows: Vec<Cow>,
+struct APIHerd {
+    cows: Vec<APICow>,
 }
 
-impl From<&app::Herd> for Herd {
+impl From<&app::Herd> for APIHerd {
     fn from(value: &app::Herd) -> Self {
         Self {
             cows: value.cows().iter().map(|v| v.into()).collect(),
@@ -150,17 +150,21 @@ impl From<&app::Herd> for Herd {
 }
 
 #[derive(Serialize)]
-struct Cow {
+struct APICow {
     name: String,
     last_seen: Option<String>,
 }
 
 const DT_FORMAT: &str = "%Y-%m-%d %H:%M:%S %z";
 
-impl From<&app::Cow> for Cow {
+impl From<&app::Cow> for APICow {
     fn from(value: &app::Cow) -> Self {
+        let name_str = match value.name() {
+            crate::domain::Name::Visible(v) => v.url().to_string(),
+            crate::domain::Name::Censored(c) => c.url().to_string(),
+        };
         Self {
-            name: value.name().url().to_string(),
+            name: name_str,
             last_seen: value.last_seen().map(|dt| dt.format(DT_FORMAT)),
         }
     }
@@ -180,8 +184,34 @@ struct RfcTemplate {}
 #[template(path = "report.html")]
 struct ReportTemplate {}
 
-struct TemplateCow {
+struct TemplateCowName {
     name: String,
+    kind: TemplateCowNameKind,
+}
+
+impl From<&crate::domain::Name> for TemplateCowName {
+    fn from(value: &crate::domain::Name) -> Self {
+        match value {
+            crate::domain::Name::Visible(v) => Self {
+                name: v.url().to_string(),
+                kind: TemplateCowNameKind::Visible,
+            },
+            crate::domain::Name::Censored(c) => Self {
+                name: c.url().to_string(),
+                kind: TemplateCowNameKind::Censored,
+            },
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TemplateCowNameKind {
+    Visible,
+    Censored,
+}
+
+struct TemplateCow {
+    name_with_kind: TemplateCowName,
     last_seen: String,
     status: CowStatus,
 }
@@ -204,7 +234,7 @@ impl From<&app::Cow> for TemplateCow {
             .unwrap_or_else(|| "never".to_string());
 
         Self {
-            name: value.name().url().to_string(),
+            name_with_kind: value.name().into(),
             last_seen: last_seen_str,
             status: value.status().into(),
         }

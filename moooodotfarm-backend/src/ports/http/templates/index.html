@@ -121,7 +121,7 @@
             display: block;
         }
 
-        .cow-name:hover {
+        a.cow-name:hover {
             color: var(--grass-dark);
         }
 
@@ -246,7 +246,12 @@
                         <img src="/cow.png" alt="cow">
                     </div>
                     <div class="cow-info">
-                        <div class="cow-name">{{ cow.name }}</div>
+                        {% match cow.name_with_kind.kind %}
+                            {% when TemplateCowNameKind::Visible %}
+                                <a href="{{ cow.name_with_kind.name }}" target="_blank" rel="noopener" class="cow-name">{{ cow.name_with_kind.name }}</a>
+                            {% when TemplateCowNameKind::Censored %}
+                                <div class="cow-name">{{ cow.name_with_kind.name }}</div>
+                        {% endmatch %}
                         <div class="cow-meta">last seen: {{ cow.last_seen }}</div>
                     </div>
                     <div class="status-indicator {{ cow.status }}"></div>

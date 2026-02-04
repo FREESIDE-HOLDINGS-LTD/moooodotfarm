@@ -12,16 +12,16 @@ const COW_SUFFIX: &str = "/cow.txt";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Cow {
-    name: Name,
+    name: VisibleName,
     character: Character,
 }
 
 impl Cow {
-    pub fn new(name: Name, character: Character) -> Result<Self> {
+    pub fn new(name: VisibleName, character: Character) -> Result<Self> {
         Ok(Cow { name, character })
     }
 
-    pub fn name(&self) -> &Name {
+    pub fn name(&self) -> &VisibleName {
         &self.name
     }
 
@@ -31,11 +31,11 @@ impl Cow {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Name {
+pub struct VisibleName {
     url: url::Url,
 }
 
-impl Name {
+impl VisibleName {
     pub fn new(s: impl Into<String>) -> Result<Self> {
         let url = url::Url::parse(&s.into())?;
         if !url.path().ends_with(COW_SUFFIX) {
@@ -114,6 +114,21 @@ impl CensoredName {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Name {
+    Visible(VisibleName),
+    Censored(CensoredName),
+}
+
+impl Name {
+    pub fn new(cow: &Cow) -> Result<Self> {
+        match cow.character() {
+            Character::Brave => Ok(Name::Visible(cow.name().clone())),
+            Character::Shy => Ok(Name::Censored(CensoredName::new(cow)?)),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Character {
     Brave,
     Shy,
@@ -155,14 +170,14 @@ impl Herd {
 
 #[derive(Clone)]
 pub struct CowStatus {
-    name: Name,
+    name: VisibleName,
     first_seen: Option<DateTime>,
     last_seen: Option<DateTime>,
     last_checked: Option<DateTime>,
 }
 
 impl CowStatus {
-    pub fn new(name: Name) -> Self {
+    pub fn new(name: VisibleName) -> Self {
         Self {
             name,
             first_seen: None,
@@ -172,7 +187,7 @@ impl CowStatus {
     }
 
     pub fn new_from_history(
-        name: Name,
+        name: VisibleName,
         first_seen: Option<DateTime>,
         last_seen: Option<DateTime>,
         last_checked: Option<DateTime>,
@@ -209,7 +224,7 @@ impl CowStatus {
         self.last_checked = Some(now.clone());
     }
 
-    pub fn name(&self) -> &Name {
+    pub fn name(&self) -> &VisibleName {
         &self.name
     }
 
@@ -228,7 +243,7 @@ impl CowStatus {
 
 #[derive(Clone)]
 pub struct CensoredCowStatus {
-    name: CensoredName,
+    name: Name,
     first_seen: Option<DateTime>,
     last_seen: Option<DateTime>,
     last_checked: Option<DateTime>,
@@ -236,20 +251,20 @@ pub struct CensoredCowStatus {
 
 impl CensoredCowStatus {
     pub fn new(
-        name: CensoredName,
+        cow: &Cow,
         first_seen: Option<DateTime>,
         last_seen: Option<DateTime>,
         last_checked: Option<DateTime>,
     ) -> Result<Self> {
         Ok(Self {
-            name,
+            name: Name::new(cow)?,
             first_seen,
             last_seen,
             last_checked,
         })
     }
 
-    pub fn name(&self) -> &CensoredName {
+    pub fn name(&self) -> &Name {
         &self.name
     }
 
@@ -267,7 +282,7 @@ impl CensoredCowStatus {
 }
 
 pub trait Inventory {
-    fn get(&self, name: &Name) -> Result<Option<CowStatus>>;
+    fn get(&self, name: &VisibleName) -> Result<Option<CowStatus>>;
     fn put(&self, status: CowStatus) -> Result<()>;
 }
 
@@ -288,7 +303,7 @@ where
         Self { herd, inventory }
     }
 
-    fn get_cow_status(&self, name: &Name) -> Result<CowStatus> {
+    fn get_cow_status(&self, name: &VisibleName) -> Result<CowStatus> {
         match self.inventory.get(name)? {
             Some(cow_status) => Ok(cow_status),
             None => Ok(CowStatus::new(name.clone())),
@@ -338,7 +353,7 @@ where
         for cow in self.herd.cows() {
             let status = self.get_cow_status(cow.name())?;
             let censored_status = CensoredCowStatus::new(
-                CensoredName::new(cow)?,
+                cow,
                 status.first_seen().cloned(),
                 status.last_seen().cloned(),
                 status.last_checked().cloned(),
@@ -367,17 +382,17 @@ mod tests {
     #[test]
     fn duplicate_cows_in_herd_are_detected_even_if_they_are_not_next_to_each_other() {
         let cow1 = Cow::new(
-            Name::new("http://example.com/cow.txt").unwrap(),
+            VisibleName::new("http://example.com/cow.txt").unwrap(),
             Character::Brave,
         )
         .unwrap();
         let cow2 = Cow::new(
-            Name::new("http://example.org/cow.txt").unwrap(),
+            VisibleName::new("http://example.org/cow.txt").unwrap(),
             Character::Brave,
         )
         .unwrap();
         let cow3 = Cow::new(
-            Name::new("http://example.com/cow.txt").unwrap(),
+            VisibleName::new("http://example.com/cow.txt").unwrap(),
             Character::Brave,
         )
         .unwrap();
@@ -458,12 +473,15 @@ mod tests {
         ];
 
         for test_case in test_cases {
-            let name = Name::new(test_case.input.to_string()).unwrap();
-            let cow = Cow::new(name, test_case.character).unwrap();
-            let censored = CensoredName::new(&cow).unwrap();
+            let visible_name = VisibleName::new(test_case.input.to_string()).unwrap();
+            let cow = Cow::new(visible_name, test_case.character).unwrap();
+            let name = Name::new(&cow).unwrap();
+            let actual_url = match name {
+                Name::Visible(v) => v.url().to_string(),
+                Name::Censored(c) => c.url().to_string(),
+            };
             assert_eq!(
-                censored.url(),
-                test_case.expected,
+                actual_url, test_case.expected,
                 "Failed for input: {}",
                 test_case.input
             );

@@ -67,13 +67,13 @@ impl TryFrom<Vec<domain::CensoredCowStatus>> for Herd {
 }
 
 pub struct Cow {
-    name: domain::CensoredName,
+    name: domain::Name,
     last_seen: Option<DateTime>,
     status: CowStatus,
 }
 
 impl Cow {
-    pub fn name(&self) -> &domain::CensoredName {
+    pub fn name(&self) -> &domain::Name {
         &self.name
     }
 
