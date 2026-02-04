@@ -38,6 +38,7 @@
         .grass-tuft {
             position: absolute;
             pointer-events: none;
+            z-index: -1;
         }
 
         .grass-tuft svg {
@@ -77,6 +78,29 @@
             box-shadow: 0 2px 0 var(--grass-dark);
             background: var(--grass-dark);
             color: white;
+        }
+
+        pre {
+            background: rgba(93, 64, 55, 0.05);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--grass-light);
+            z-index: 0;
+        }
+
+        pre code {
+            background: transparent;
+            padding: 0;
+        }
+
+        code {
+            background: rgba(161, 136, 127, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.95em;
+            color: var(--grass-dark);
         }
 
         {% block extra_styles %}{% endblock %}
