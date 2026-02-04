@@ -104,7 +104,7 @@
             image-rendering: pixelated;
         }
 
-        .cow-icon.inactive img {
+        .cow-icon.ran-away img {
             filter: grayscale(100%) opacity(0.5);
         }
 
@@ -241,8 +241,8 @@
 
         <ul class="cow-list" id="cowList">
             {% for cow in cows %}
-                <li class="cow-item">
-                    <div class="cow-icon">
+                <li class="cow-item ">
+                    <div class="cow-icon {{ cow.status }}">
                         <img src="/cow.png" alt="cow">
                     </div>
                     <div class="cow-info">
