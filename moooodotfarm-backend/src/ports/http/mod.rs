@@ -152,6 +152,7 @@ impl From<&app::Herd> for APIHerd {
 #[derive(Serialize)]
 struct APICow {
     name: String,
+    character: String,
     last_seen: Option<String>,
 }
 
@@ -163,8 +164,13 @@ impl From<&app::Cow> for APICow {
             crate::domain::Name::Visible(v) => v.url().to_string(),
             crate::domain::Name::Censored(c) => c.url().to_string(),
         };
+        let character_str = match value.character() {
+            crate::domain::Character::Brave => "brave".to_string(),
+            crate::domain::Character::Shy => "shy".to_string(),
+        };
         Self {
             name: name_str,
+            character: character_str,
             last_seen: value.last_seen().map(|dt| dt.format(DT_FORMAT)),
         }
     }

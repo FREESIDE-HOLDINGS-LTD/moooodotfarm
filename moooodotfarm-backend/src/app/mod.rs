@@ -2,6 +2,7 @@ pub mod get_herd;
 pub mod update;
 
 use crate::domain;
+use crate::domain::Character;
 use crate::domain::time::{DateTime, Duration};
 use crate::errors::{Error, Result};
 
@@ -68,6 +69,7 @@ impl TryFrom<Vec<domain::CensoredCowStatus>> for Herd {
 
 pub struct Cow {
     name: domain::Name,
+    character: Character,
     last_seen: Option<DateTime>,
     status: CowStatus,
 }
@@ -75,6 +77,10 @@ pub struct Cow {
 impl Cow {
     pub fn name(&self) -> &domain::Name {
         &self.name
+    }
+
+    pub fn character(&self) -> &Character {
+        &self.character
     }
 
     pub fn last_seen(&self) -> Option<&DateTime> {
@@ -92,6 +98,7 @@ impl TryFrom<&domain::CensoredCowStatus> for Cow {
     fn try_from(value: &domain::CensoredCowStatus) -> Result<Self> {
         Ok(Self {
             name: value.name().clone(),
+            character: value.character().clone(),
             last_seen: value.last_seen().cloned(),
             status: CowStatus::new(value),
         })

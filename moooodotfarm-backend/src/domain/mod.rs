@@ -205,7 +205,8 @@ impl CowStatus {
     pub fn should_check(&self) -> bool {
         if let Some(last_checked) = &self.last_checked {
             let now = DateTime::now();
-            return &now - last_checked > Duration::new_from_hours(CHECK_COW_IF_NOT_CHECKED_FOR_HOURS);
+            return &now - last_checked
+                > Duration::new_from_hours(CHECK_COW_IF_NOT_CHECKED_FOR_HOURS);
         }
         true
     }
@@ -246,6 +247,7 @@ impl CowStatus {
 #[derive(Clone)]
 pub struct CensoredCowStatus {
     name: Name,
+    character: Character,
     first_seen: Option<DateTime>,
     last_seen: Option<DateTime>,
     last_checked: Option<DateTime>,
@@ -260,6 +262,7 @@ impl CensoredCowStatus {
     ) -> Result<Self> {
         Ok(Self {
             name: Name::new(cow)?,
+            character: cow.character().clone(),
             first_seen,
             last_seen,
             last_checked,
@@ -268,6 +271,10 @@ impl CensoredCowStatus {
 
     pub fn name(&self) -> &Name {
         &self.name
+    }
+
+    pub fn character(&self) -> &Character {
+        &self.character
     }
 
     pub fn first_seen(&self) -> Option<&DateTime> {
