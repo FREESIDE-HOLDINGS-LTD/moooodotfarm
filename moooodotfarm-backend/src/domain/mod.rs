@@ -138,10 +138,16 @@ pub enum Character {
 
 pub fn cow_is_present(s: impl Into<String>) -> bool {
     let a: String = s.into();
-    let a = a.trim();
-    let b = COW_BODY.trim();
+    let a = trim_trailing_whitespace_from_each_line(a.trim());
+    let b = trim_trailing_whitespace_from_each_line(COW_BODY.trim());
     let distance = edit_distance::edit_distance(a, b);
     distance < 100
+}
+fn trim_trailing_whitespace_from_each_line(s: &str) -> String {
+    s.lines()
+        .map(|line| line.trim_end())
+        .collect::<Vec<&str>>()
+        .join("\n")
 }
 
 #[derive(Debug, Clone)]
@@ -381,10 +387,41 @@ mod tests {
 
     #[test]
     fn cow_validation_works() -> Result<()> {
-        let test_cow = read_to_string(fixtures::test_file_path("src/ports/http/static/cow.txt"))?;
+        struct CowValidationTestCase {
+            name: &'static str,
+            input: String,
+            expected: bool,
+        }
 
-        assert!(cow_is_present(&test_cow));
-        assert!(!cow_is_present("not a cow"));
+        let test_cases = vec![
+            CowValidationTestCase {
+                name: "valid cow",
+                input: read_to_string(fixtures::test_file_path("src/ports/http/static/cow.txt"))?,
+                expected: true,
+            },
+            CowValidationTestCase {
+                name: "not a cow",
+                input: "not a cow".to_string(),
+                expected: false,
+            },
+            CowValidationTestCase {
+                name: "cow with no trailing whitespace",
+                input: read_to_string(fixtures::test_file_path(
+                    "src/domain/testdata/cow_with_no_trailing_whitespace.txt",
+                ))?,
+                expected: true,
+            },
+        ];
+
+        for test_case in test_cases {
+            let actual = cow_is_present(&test_case.input);
+            assert_eq!(
+                actual, test_case.expected,
+                "Failed for test case: {}",
+                test_case.name
+            );
+        }
+
         Ok(())
     }
 
