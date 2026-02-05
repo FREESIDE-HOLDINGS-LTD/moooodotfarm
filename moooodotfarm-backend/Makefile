@@ -29,3 +29,7 @@ fix:
 .PHONY: check-repository-unchanged
 check-repository-unchanged:
 	../check_repository_unchanged.sh
+
+.PHONY: local
+local:
+	cargo run -- run local_config.toml

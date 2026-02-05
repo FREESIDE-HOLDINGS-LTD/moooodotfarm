@@ -1,6 +1,6 @@
-address = "0.0.0.0:8081"
+address = "0.0.0.0:8080"
 environment = "development"
-database_path = "./_data/db"
+database_path = "./local_database.redb"
 
 [[cows]]
 name = "https://moooo.farm/cow.txt"
