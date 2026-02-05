@@ -122,20 +122,25 @@
     </div>
 
     <script>
-        const baseGrassPositions = [
-            { left: '5%', top: '15%', width: 40, height: 50, rotate: -10 },
-            { right: '8%', top: '20%', width: 35, height: 45, rotate: 5 },
-            { left: '12%', top: '55%', width: 30, height: 40, rotate: -5 },
-            { right: '5%', top: '60%', width: 45, height: 55, rotate: 8 },
-            { left: '3%', top: '91%', width: 50, height: 60, rotate: 0 },
-            { right: '2%', top: '94%', width: 55, height: 65, rotate: -3 }
-        ];
-
         const grassSvg = `<svg viewBox="0 0 40 50" fill="none">
             <path d="M8 50 Q10 30, 5 10" stroke="var(--grass)" stroke-width="3" stroke-linecap="round"/>
             <path d="M15 50 Q17 25, 20 5" stroke="var(--grass-dark)" stroke-width="3" stroke-linecap="round"/>
             <path d="M22 50 Q20 35, 28 15" stroke="var(--grass-light)" stroke-width="3" stroke-linecap="round"/>
         </svg>`;
+
+        const baseWidth = 40;
+        const widthVariance = 10;
+
+        const baseHeight = 50;
+        const heightVariance = 10;
+
+        const baseRotate = -5;
+        const rotationVariance = 20;
+
+        const topVariancePct = 0.10;
+
+        const baseLeftRight = 10;
+        const leftRightVariance = 5;
 
         const viewHeight = window.innerHeight || 1;
         const pageHeight = Math.max(
@@ -146,19 +151,42 @@
         const rows = Math.max(1, Math.ceil(pageHeight / viewHeight));
         const grassPositions = [];
 
+        const randomize = (middle, variance) => {
+            const min = middle - variance;
+            const max = middle + variance;
+            return min + Math.random() * (max - min);
+        };
+
         for (let row = 0; row < rows; row += 1) {
             const rowTop = row * viewHeight;
-            baseGrassPositions.forEach(pos => {
-                const percent = parseFloat(pos.top) / 100;
-                grassPositions.push({
-                    left: pos.left,
-                    right: pos.right,
-                    width: pos.width,
-                    height: pos.height,
-                    rotate: pos.rotate,
-                    top: `${rowTop + percent * viewHeight}px`
-                });
-            });
+
+            for (let i = 0; i < 3; i += 1) {
+                const baseTopPx = rowTop + [0.15, 0.50, 0.85][i] * viewHeight;
+
+                const leftTopPx = randomize(baseTopPx, topVariancePct * viewHeight);
+                const leftHeight = Math.round(randomize(baseHeight, heightVariance));
+                if (leftTopPx + leftHeight <= pageHeight) {
+                    grassPositions.push({
+                        left: `${randomize(baseLeftRight, leftRightVariance)}%`,
+                        width: Math.round(randomize(baseWidth, widthVariance)),
+                        height: leftHeight,
+                        rotate: randomize(baseRotate, rotationVariance),
+                        top: `${leftTopPx}px`
+                    });
+                }
+
+                const rightTopPx = randomize(baseTopPx, topVariancePct * viewHeight);
+                const rightHeight = Math.round(randomize(baseHeight, heightVariance));
+                if (rightTopPx + rightHeight <= pageHeight) {
+                    grassPositions.push({
+                        right: `${randomize(baseLeftRight, leftRightVariance)}%`,
+                        width: Math.round(randomize(baseWidth, widthVariance)),
+                        height: rightHeight,
+                        rotate: randomize(baseRotate, rotationVariance),
+                        top: `${rightTopPx}px`
+                    });
+                }
+            }
         }
 
         const container = document.getElementById('grassContainer');
@@ -167,7 +195,7 @@
             tuft.className = 'grass-tuft';
             tuft.style.cssText = `width: ${pos.width}px; height: ${pos.height}px; transform: rotate(${pos.rotate}deg);` +
                 (pos.left ? `left: ${pos.left};` : `right: ${pos.right};`) +
-                (pos.top ? `top: ${pos.top};` : `bottom: ${pos.bottom};`);
+                `top: ${pos.top};`;
             tuft.innerHTML = grassSvg;
             container.appendChild(tuft);
         });
