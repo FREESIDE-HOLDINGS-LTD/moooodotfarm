@@ -218,13 +218,20 @@ Accept: text/plain
             <li>RFC 2119: Key words for use in RFCs to Indicate Requirement Levels.</li>
         </ol>
 
+
         <h2>Appendix A. Reference cow.txt</h2>
+
         <p>
-            The following is the canonical <code>cow.txt</code> content. Servers <strong>MUST</strong> return this
-            content byte-for-byte.
+            Reference <code>cow.txt</code> can be retrieved directly from this server. This method <strong>SHOULD</strong> be used to minimize the risk of dangerous cow transcription errors. Servers <strong>MUST</strong> return this content byte-for-byte.
         </p>
-        <pre><code>
-                                                                                                                                                                      
+
+        <pre><code>$ curl https://moooo.farm/cow.txt > cow.txt</code></pre>
+
+        <p>
+            Alternatively the following is the canonical <code>cow.txt</code> content. copying the canonical <code>cow.txt</code> content from this document instead of retrieving the file directly <strong>SHOULD NOT</strong> be done as it is much more likely to lead to serious cow transcription errors with hard to predict and far-reaching consequences.
+        </p>
+
+<pre><code>                                                                                                                                                                      
                                                                                                                                                                       
                                                                                                                                                                       
                                                                                                                                                                       
@@ -281,7 +288,6 @@ Accept: text/plain
                                                                                                                                                                       
                                                                                                                                                                       
                                                                                                                                                                       
-
 </code></pre>
 
         <div class="footer">
