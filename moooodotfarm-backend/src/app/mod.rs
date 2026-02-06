@@ -2,8 +2,8 @@ pub mod get_herd;
 pub mod update;
 
 use crate::domain;
-use crate::domain::Character;
 use crate::domain::time::{DateTime, Duration};
+use crate::domain::{Character, VisibleName};
 use crate::errors::{Error, Result};
 
 pub trait UpdateHandler {
@@ -12,11 +12,6 @@ pub trait UpdateHandler {
 
 pub trait GetHerdHandler {
     fn get_herd(&self) -> Result<Herd>;
-}
-
-pub trait Rancher {
-    async fn update(&self) -> Result<()>;
-    fn get_cow_statuses(&self) -> Result<Vec<domain::CensoredCowStatus>>;
 }
 
 pub trait Metrics {
@@ -33,19 +28,6 @@ pub trait Metrics {
 pub enum ApplicationHandlerCallResult {
     Ok,
     Error,
-}
-
-impl<T> Rancher for domain::Rancher<T>
-where
-    T: domain::Inventory,
-{
-    async fn update(&self) -> Result<()> {
-        self.update().await
-    }
-
-    fn get_cow_statuses(&self) -> Result<Vec<domain::CensoredCowStatus>> {
-        self.get_cow_statuses()
-    }
 }
 
 pub struct Herd {
@@ -135,4 +117,9 @@ impl CowStatus {
 
         CowStatus::RanAway
     }
+}
+
+pub trait Inventory {
+    fn get(&self, name: &VisibleName) -> Result<Option<domain::CowStatus>>;
+    fn put(&self, status: domain::CowStatus) -> Result<()>;
 }

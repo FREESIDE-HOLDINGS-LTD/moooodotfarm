@@ -266,18 +266,13 @@ pub struct CensoredCowStatus {
 }
 
 impl CensoredCowStatus {
-    pub fn new(
-        cow: &Cow,
-        first_seen: Option<DateTime>,
-        last_seen: Option<DateTime>,
-        last_checked: Option<DateTime>,
-    ) -> Result<Self> {
+    pub fn new(cow: &Cow, cow_status: &CowStatus) -> Result<Self> {
         Ok(Self {
             name: Name::new(cow)?,
             character: cow.character().clone(),
-            first_seen,
-            last_seen,
-            last_checked,
+            first_seen: cow_status.first_seen.clone(),
+            last_seen: cow_status.last_seen.clone(),
+            last_checked: cow_status.last_checked.clone(),
         })
     }
 
@@ -299,89 +294,6 @@ impl CensoredCowStatus {
 
     pub fn last_checked(&self) -> Option<&DateTime> {
         self.last_checked.as_ref()
-    }
-}
-
-pub trait Inventory {
-    fn get(&self, name: &VisibleName) -> Result<Option<CowStatus>>;
-    fn put(&self, status: CowStatus) -> Result<()>;
-}
-
-#[derive(Clone)]
-pub struct Rancher<I>
-where
-    I: Inventory,
-{
-    herd: Herd,
-    inventory: I,
-}
-
-impl<I> Rancher<I>
-where
-    I: Inventory,
-{
-    pub fn new(herd: Herd, inventory: I) -> Self {
-        Self { herd, inventory }
-    }
-
-    fn get_cow_status(&self, name: &VisibleName) -> Result<CowStatus> {
-        match self.inventory.get(name)? {
-            Some(cow_status) => Ok(cow_status),
-            None => Ok(CowStatus::new(name.clone())),
-        }
-    }
-
-    async fn is_present(&self, cow: &Cow) -> Result<()> {
-        let cow_body = reqwest::get(cow.name().url().to_string())
-            .await?
-            .text()
-            .await?;
-        if !cow_is_present(&cow_body) {
-            return Err(Error::Unknown(anyhow!("cow is not present: {}", cow_body)));
-        }
-        Ok(())
-    }
-}
-
-impl<I> Rancher<I>
-where
-    I: Inventory,
-{
-    pub async fn update(&self) -> Result<()> {
-        for cow in self.herd.cows() {
-            let mut status = self.get_cow_status(cow.name())?;
-            if !status.should_check() {
-                continue;
-            }
-
-            match self.is_present(cow).await {
-                Ok(_) => {
-                    status.mark_as_ok();
-                }
-                Err(err) => {
-                    log::warn!("cow is missing {}: {}", cow, err);
-                    status.mark_as_missing();
-                }
-            }
-
-            self.inventory.put(status)?;
-        }
-        Ok(())
-    }
-
-    pub fn get_cow_statuses(&self) -> Result<Vec<CensoredCowStatus>> {
-        let mut statuses = vec![];
-        for cow in self.herd.cows() {
-            let status = self.get_cow_status(cow.name())?;
-            let censored_status = CensoredCowStatus::new(
-                cow,
-                status.first_seen().cloned(),
-                status.last_seen().cloned(),
-                status.last_checked().cloned(),
-            )?;
-            statuses.push(censored_status);
-        }
-        Ok(statuses)
     }
 }
 

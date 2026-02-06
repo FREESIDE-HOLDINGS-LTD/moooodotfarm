@@ -1,7 +1,7 @@
-use crate::domain;
 use crate::domain::time::DateTime;
 use crate::domain::{CowStatus, VisibleName};
 use crate::errors::Result;
+use crate::{app, domain};
 use anyhow::Context;
 use redb;
 use redb::ReadableDatabase;
@@ -25,7 +25,7 @@ impl Database {
     }
 }
 
-impl domain::Inventory for Database {
+impl app::Inventory for Database {
     fn get(&self, name: &VisibleName) -> Result<Option<CowStatus>> {
         let db = self.db.lock().unwrap();
 
