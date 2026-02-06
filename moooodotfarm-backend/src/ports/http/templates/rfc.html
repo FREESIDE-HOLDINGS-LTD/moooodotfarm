@@ -228,6 +228,16 @@ Accept: text/plain
         <pre><code>$ curl https://moooo.farm/cow.txt > cow.txt</code></pre>
 
         <p>
+            The validity of the retrieved reference <code>cow.txt</code> can be verified by checking the hash against the following reference <code>cow.txt</code> hashes. It is recommended to verify the hash of the retrieved reference <code>cow.txt</code> to prevent cow-in-the-middle attacks that could maliciously alter the retrieved reference <code>cow.txt</code>.
+        </p>
+
+        <pre><code>$ sha256sum cow.txt
+87d03ff0332c5a88809c03a0c143287b73634a3a2109b896a18af2d805cf366e  cow.txt
+
+$ sha512sum cow.txt
+5b7433ef9fe1415410e59f47db11409f6683f2de6a84d123791bc822fd291ad45da09d9fd97a3cc80aa40592d5cf4d22ea05e048a78fb69162aebdced8d154a5  cow.txt</code></pre>
+
+        <p>
             Alternatively the following is the canonical <code>cow.txt</code> content. copying the canonical <code>cow.txt</code> content from this document instead of retrieving the file directly <strong>SHOULD NOT</strong> be done as it is much more likely to lead to serious cow transcription errors with hard to predict and far-reaching consequences.
         </p>
 
