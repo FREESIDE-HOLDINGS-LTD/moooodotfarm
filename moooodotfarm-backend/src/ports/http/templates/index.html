@@ -23,6 +23,15 @@
             50% { transform: translateY(-8px); }
         }
 
+        @keyframes gentle-bob-flipped {
+            0%, 100% { transform: scaleY(-1) translateY(0); }
+            50% { transform: scaleY(-1) translateY(-8px); }
+        }
+
+        .cow-hero.flipped {
+            animation: gentle-bob-flipped 3s ease-in-out infinite;
+        }
+
         .site-subtitle {
             font-size: 1.8rem;
             font-weight: 700;
@@ -265,4 +274,13 @@
             {% endfor %}
         </ul>
     </main>
+
+    <script>
+        if (Math.random() < 0.001) {
+            const cowHero = document.querySelector('.cow-hero');
+            if (cowHero) {
+                cowHero.classList.add('flipped');
+            }
+        }
+    </script>
 {% endblock %}
