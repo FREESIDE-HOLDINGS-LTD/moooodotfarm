@@ -33,6 +33,12 @@ impl Cow {
     }
 }
 
+impl Display for Cow {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name.url())
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VisibleName {
     url: url::Url,
@@ -52,12 +58,6 @@ impl VisibleName {
 
     pub fn url(&self) -> &url::Url {
         &self.url
-    }
-}
-
-impl Display for Cow {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name.url())
     }
 }
 
@@ -135,20 +135,6 @@ impl Name {
 pub enum Character {
     Brave,
     Shy,
-}
-
-pub fn cow_is_present(s: impl Into<String>) -> bool {
-    let a: String = s.into();
-    let a = trim_trailing_whitespace_from_each_line(a.trim());
-    let b = trim_trailing_whitespace_from_each_line(COW_BODY.trim());
-    let distance = edit_distance::edit_distance(a, b);
-    distance < 100
-}
-fn trim_trailing_whitespace_from_each_line(s: &str) -> String {
-    s.lines()
-        .map(|line| line.trim_end())
-        .collect::<Vec<&str>>()
-        .join("\n")
 }
 
 #[derive(Debug, Clone)]
@@ -297,6 +283,38 @@ impl CensoredCowStatus {
     }
 }
 
+pub struct CowTxt<'a> {
+    content: std::borrow::Cow<'a, str>,
+}
+
+impl<'a> CowTxt<'a> {
+    pub fn new(content: impl Into<std::borrow::Cow<'a, str>>) -> Result<Self> {
+        let content = content.into();
+        if !Self::cow_is_present(&content) {
+            return Err(Error::CowIsNotPresent(content.into_owned()));
+        }
+
+        Ok(Self { content })
+    }
+    fn cow_is_present(s: &str) -> bool {
+        let a: String = s.into();
+        let a = trim_trailing_whitespace_from_each_line(a.trim());
+        let b = trim_trailing_whitespace_from_each_line(COW_BODY.trim());
+        let distance = edit_distance::edit_distance(a, b);
+        distance < 100
+    }
+    pub fn content(&self) -> &str {
+        &self.content
+    }
+}
+
+fn trim_trailing_whitespace_from_each_line(s: &str) -> String {
+    s.lines()
+        .map(|line| line.trim_end())
+        .collect::<Vec<&str>>()
+        .join("\n")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -308,36 +326,48 @@ mod tests {
         struct CowValidationTestCase {
             name: &'static str,
             input: String,
-            expected: bool,
+            expected_ok: bool,
         }
 
         let test_cases = vec![
             CowValidationTestCase {
                 name: "valid cow",
                 input: read_to_string(fixtures::test_file_path("src/ports/http/static/cow.txt"))?,
-                expected: true,
+                expected_ok: true,
             },
             CowValidationTestCase {
                 name: "not a cow",
                 input: "not a cow".to_string(),
-                expected: false,
+                expected_ok: false,
             },
             CowValidationTestCase {
                 name: "cow with no trailing whitespace",
                 input: read_to_string(fixtures::test_file_path(
                     "src/domain/testdata/cow_with_no_trailing_whitespace.txt",
                 ))?,
-                expected: true,
+                expected_ok: true,
             },
         ];
 
         for test_case in test_cases {
-            let actual = cow_is_present(&test_case.input);
-            assert_eq!(
-                actual, test_case.expected,
-                "Failed for test case: {}",
-                test_case.name
-            );
+            let actual = CowTxt::new(&test_case.input);
+            match actual {
+                Ok(_) => {
+                    assert!(
+                        test_case.expected_ok,
+                        "Expected test case to fail but it succeeded: {}",
+                        test_case.name
+                    );
+                }
+                Err(err) => {
+                    println!("Error: {}", err);
+                    assert!(
+                        !test_case.expected_ok,
+                        "Expected test case to succeed but it failed: {}",
+                        test_case.name
+                    );
+                }
+            }
         }
 
         Ok(())

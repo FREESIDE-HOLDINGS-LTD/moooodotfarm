@@ -4,8 +4,8 @@ use crate::app;
 use crate::app::{ApplicationHandlerCallResult, Herd};
 use crate::config::{Config, Environment};
 use crate::domain;
-use crate::domain::Cow;
 use crate::domain::time::Duration;
+use crate::domain::{Cow, CowTxt, VisibleName};
 use crate::errors::Result;
 use anyhow::anyhow;
 use prometheus::{CounterVec, GaugeVec, HistogramOpts, HistogramVec, Opts, Registry, labels};
@@ -189,6 +189,28 @@ fn cow_status_as_str(status: &app::CowStatus) -> &'static str {
         app::CowStatus::HappilyGrazing => "happily_grazing",
         app::CowStatus::RanAway => "ran_away",
         app::CowStatus::HaveNotCheckedYet => "have_not_checked_yet",
+    }
+}
+
+#[derive(Clone)]
+pub struct CowTxtDownloader {}
+
+impl Default for CowTxtDownloader {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl CowTxtDownloader {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl app::CowTxtDownloader for CowTxtDownloader {
+    async fn download(&self, name: &VisibleName) -> Result<CowTxt<'_>> {
+        let cow_body = reqwest::get(name.url().to_string()).await?.text().await?;
+        CowTxt::new(cow_body)
     }
 }
 

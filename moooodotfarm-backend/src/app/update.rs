@@ -1,30 +1,32 @@
-use crate::app::{Inventory, Metrics};
+use crate::app::{CowTxtDownloader, Inventory, Metrics};
 use crate::domain::VisibleName;
 use crate::errors::{Error, Result};
 use crate::{app, domain};
-use anyhow::anyhow;
 use moooodotfarm_macros::application_handler;
 
 #[derive(Clone)]
-pub struct UpdateHandler<I, M> {
+pub struct UpdateHandler<I, D, M> {
     herd: domain::Herd,
     inventory: I,
+    downloader: D,
     metrics: M,
 }
 
-impl<I, M> UpdateHandler<I, M> {
-    pub fn new(herd: domain::Herd, inventory: I, metrics: M) -> Self {
+impl<I, D, M> UpdateHandler<I, D, M> {
+    pub fn new(herd: domain::Herd, inventory: I, downloader: D, metrics: M) -> Self {
         Self {
-            inventory,
             herd,
+            inventory,
+            downloader,
             metrics,
         }
     }
 }
 
-impl<I, M> app::UpdateHandler for UpdateHandler<I, M>
+impl<I, D, M> app::UpdateHandler for UpdateHandler<I, D, M>
 where
     I: Inventory,
+    D: CowTxtDownloader,
     M: Metrics,
 {
     #[application_handler]
@@ -35,7 +37,7 @@ where
                 continue;
             }
 
-            match self.is_present(cow).await {
+            match self.downloader.download(cow.name()).await {
                 Ok(_) => {
                     status.mark_as_ok();
                 }
@@ -55,9 +57,10 @@ where
     }
 }
 
-impl<I, M> UpdateHandler<I, M>
+impl<I, D, M> UpdateHandler<I, D, M>
 where
     I: Inventory,
+    D: CowTxtDownloader,
     M: Metrics,
 {
     fn get_or_create_cow_status(&self, name: &VisibleName) -> Result<domain::CowStatus> {
@@ -65,16 +68,5 @@ where
             Some(cow_status) => Ok(cow_status),
             None => Ok(domain::CowStatus::new(name.clone())),
         }
-    }
-
-    async fn is_present(&self, cow: &crate::domain::Cow) -> Result<()> {
-        let cow_body = reqwest::get(cow.name().url().to_string())
-            .await?
-            .text()
-            .await?;
-        if !domain::cow_is_present(&cow_body) {
-            return Err(Error::Unknown(anyhow!("cow is not present: {}", cow_body)));
-        }
-        Ok(())
     }
 }

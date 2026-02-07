@@ -46,11 +46,17 @@ async fn run(config_file_path: &str) -> Result<()> {
     let metrics = adapters::Metrics::new()?;
 
     let database = database::Database::new(config.database_path())?;
+    let downloader = adapters::CowTxtDownloader::new();
 
     let cows = config.cows().to_vec();
     let herd = domain::Herd::new(cows)?;
 
-    let update_handler = UpdateHandler::new(herd.clone(), database.clone(), metrics.clone());
+    let update_handler = UpdateHandler::new(
+        herd.clone(),
+        database.clone(),
+        downloader.clone(),
+        metrics.clone(),
+    );
     let get_herd_handler = GetHerdHandler::new(herd.clone(), database.clone(), metrics.clone());
 
     let mut timer = timers::UpdateTimer::new(update_handler);

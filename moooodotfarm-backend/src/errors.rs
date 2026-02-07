@@ -4,6 +4,9 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum Error {
+    #[error("cow is not present in `{0}`")]
+    CowIsNotPresent(String),
+
     #[error(transparent)]
     Unknown(#[from] anyhow::Error),
 }

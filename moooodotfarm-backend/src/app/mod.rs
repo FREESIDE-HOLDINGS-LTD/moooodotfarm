@@ -25,6 +25,15 @@ pub trait Metrics {
     fn update_herd_numbers(&self, herd: &Herd);
 }
 
+pub trait Inventory {
+    fn get(&self, name: &VisibleName) -> Result<Option<domain::CowStatus>>;
+    fn put(&self, status: domain::CowStatus) -> Result<()>;
+}
+
+pub trait CowTxtDownloader {
+    async fn download(&self, name: &domain::VisibleName) -> Result<domain::CowTxt<'_>>;
+}
+
 pub enum ApplicationHandlerCallResult {
     Ok,
     Error,
@@ -117,9 +126,4 @@ impl CowStatus {
 
         CowStatus::RanAway
     }
-}
-
-pub trait Inventory {
-    fn get(&self, name: &VisibleName) -> Result<Option<domain::CowStatus>>;
-    fn put(&self, status: domain::CowStatus) -> Result<()>;
 }
