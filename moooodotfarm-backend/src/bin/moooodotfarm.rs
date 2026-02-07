@@ -12,7 +12,7 @@ use moooodotfarm_backend::ports::grpc::generated::GetHerdRequest;
 use moooodotfarm_backend::ports::grpc::generated::moooodotfarm_service_client::MoooodotfarmServiceClient;
 use moooodotfarm_backend::ports::timers;
 use moooodotfarm_backend::ports::{grpc, http};
-use moooodotfarm_backend::{adapters, app, domain};
+use moooodotfarm_backend::{adapters, app};
 use prometheus::Registry;
 
 fn cli() -> Command {
@@ -200,16 +200,9 @@ impl<'a> Service<'a> {
         let database = database::Database::new(config.database_path())?;
         let downloader = adapters::CowTxtDownloader::new();
 
-        let cows = config.cows().to_vec();
-        let herd = domain::Herd::new(cows)?;
-
-        let update_handler = UpdateHandler::new(
-            herd.clone(),
-            database.clone(),
-            downloader.clone(),
-            metrics.clone(),
-        );
-        let get_herd_handler = GetHerdHandler::new(herd.clone(), database.clone(), metrics.clone());
+        let update_handler =
+            UpdateHandler::new(database.clone(), downloader.clone(), metrics.clone());
+        let get_herd_handler = GetHerdHandler::new(database.clone(), metrics.clone());
 
         let timer = timers::UpdateTimer::new(update_handler.clone());
         let http_deps = HttpDeps::new(get_herd_handler.clone(), metrics);

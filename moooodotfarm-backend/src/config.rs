@@ -1,4 +1,3 @@
-use crate::domain::Cow;
 use crate::errors::Result;
 use anyhow::anyhow;
 
@@ -8,7 +7,6 @@ pub struct Config {
     grpc_address: String,
     environment: Environment,
     database_path: String,
-    cows: Vec<Cow>,
 }
 
 impl Config {
@@ -17,7 +15,6 @@ impl Config {
         grpc_address: impl Into<String>,
         environment: Environment,
         database_path: impl Into<String>,
-        cows: Vec<Cow>,
     ) -> Result<Self> {
         let http_address = http_address.into();
         if http_address.is_empty() {
@@ -31,15 +28,11 @@ impl Config {
         if database_path.is_empty() {
             return Err(anyhow!("database_path can't be empty").into());
         }
-        if cows.is_empty() {
-            return Err(anyhow!("cows can't be empty").into());
-        }
         Ok(Self {
             http_address,
             grpc_address,
             environment,
             database_path,
-            cows,
         })
     }
 
@@ -57,10 +50,6 @@ impl Config {
 
     pub fn database_path(&self) -> &str {
         &self.database_path
-    }
-
-    pub fn cows(&self) -> &[Cow] {
-        &self.cows
     }
 }
 

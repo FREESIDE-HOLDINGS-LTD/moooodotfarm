@@ -1,20 +1,19 @@
 use crate::app::{CowTxtDownloader, Inventory, Metrics};
 use crate::errors::{Error, Result};
 use crate::{app, domain};
+use anyhow::anyhow;
 use moooodotfarm_macros::application_handler;
 
 #[derive(Clone)]
 pub struct AddCowHandler<I, D, M> {
-    herd: domain::Herd,
     inventory: I,
     downloader: D,
     metrics: M,
 }
 
 impl<I, D, M> AddCowHandler<I, D, M> {
-    pub fn new(herd: domain::Herd, inventory: I, downloader: D, metrics: M) -> Self {
+    pub fn new(inventory: I, downloader: D, metrics: M) -> Self {
         Self {
-            herd,
             inventory,
             downloader,
             metrics,
@@ -29,7 +28,17 @@ where
     M: Metrics,
 {
     #[application_handler]
-    async fn add_cow(&self, _v: &app::AddCow) -> Result<()> {
+    async fn add_cow(&self, v: &app::AddCow) -> Result<()> {
+        self.downloader.download(v.name()).await?;
+
+        self.inventory.update(v.name(), |status| {
+            if status.is_some() {
+                return Err(Error::Unknown(anyhow!("cow already exists")));
+            }
+
+            let cow = domain::Cow::new(v.name().clone(), v.character().clone());
+            Ok(Some(cow))
+        })?;
         Ok::<(), Error>(())
     }
 }

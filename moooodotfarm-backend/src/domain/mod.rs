@@ -4,6 +4,7 @@ use crate::domain::time::{DateTime, Duration};
 use crate::errors::Error;
 use crate::errors::Result;
 use anyhow::anyhow;
+use std::fmt;
 use std::fmt::{Display, Formatter};
 
 const COW_BODY: &str = include_str!("../ports/http/static/cow.txt");
@@ -13,15 +14,70 @@ const COW_SUFFIX: &str = "/cow.txt";
 static CHECK_COW_IF_NOT_CHECKED_FOR_HOURS: u64 = 2;
 static CHECK_COW_WHICH_WAS_NEVER_SEEN_IF_NOT_CHECKED_FOR_MINUTES: u64 = 15;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Cow {
     name: VisibleName,
     character: Character,
+    first_seen: Option<DateTime>,
+    last_seen: Option<DateTime>,
+    last_checked: Option<DateTime>,
 }
 
 impl Cow {
-    pub fn new(name: VisibleName, character: Character) -> Result<Self> {
-        Ok(Cow { name, character })
+    pub fn new(name: VisibleName, character: Character) -> Self {
+        Self {
+            name,
+            character,
+            first_seen: None,
+            last_seen: None,
+            last_checked: None,
+        }
+    }
+
+    pub fn new_from_history(
+        name: VisibleName,
+        character: Character,
+        first_seen: Option<DateTime>,
+        last_seen: Option<DateTime>,
+        last_checked: Option<DateTime>,
+    ) -> Self {
+        Self {
+            name,
+            character,
+            first_seen,
+            last_seen,
+            last_checked,
+        }
+    }
+
+    pub fn should_check(&self) -> bool {
+        if let Some(last_checked) = &self.last_checked {
+            let duration = if self.first_seen.is_none() {
+                Duration::new_from_minutes(
+                    CHECK_COW_WHICH_WAS_NEVER_SEEN_IF_NOT_CHECKED_FOR_MINUTES,
+                )
+            } else {
+                Duration::new_from_hours(CHECK_COW_IF_NOT_CHECKED_FOR_HOURS)
+            };
+            return &DateTime::now() - last_checked > duration;
+        }
+        true
+    }
+
+    pub fn mark_as_ok(&mut self) {
+        let now = DateTime::now();
+
+        if self.first_seen.is_none() {
+            self.first_seen = Some(now.clone());
+        }
+
+        self.last_seen = Some(now.clone());
+        self.last_checked = Some(now.clone());
+    }
+
+    pub fn mark_as_missing(&mut self) {
+        let now = DateTime::now();
+        self.last_checked = Some(now.clone());
     }
 
     pub fn name(&self) -> &VisibleName {
@@ -31,11 +87,23 @@ impl Cow {
     pub fn character(&self) -> &Character {
         &self.character
     }
+
+    pub fn first_seen(&self) -> Option<&DateTime> {
+        self.first_seen.as_ref()
+    }
+
+    pub fn last_seen(&self) -> Option<&DateTime> {
+        self.last_seen.as_ref()
+    }
+
+    pub fn last_checked(&self) -> Option<&DateTime> {
+        self.last_checked.as_ref()
+    }
 }
 
-impl Display for Cow {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name.url())
+impl fmt::Display for Cow {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.name().url)
     }
 }
 
@@ -137,113 +205,8 @@ pub enum Character {
     Shy,
 }
 
-#[derive(Debug, Clone)]
-pub struct Herd {
-    cows: Vec<Cow>,
-}
-
-impl Herd {
-    pub fn new(mut cows: Vec<Cow>) -> Result<Self> {
-        if cows.is_empty() {
-            return Err(Error::Unknown(anyhow!("all the cows have escaped")));
-        }
-        cows.sort_by(|a, b| a.name().url().cmp(b.name().url()));
-
-        for i in 1..cows.len() {
-            if cows[i - 1].name().url() == cows[i].name().url() {
-                return Err(Error::Unknown(anyhow!("duplicate cow found {}", cows[i])));
-            }
-        }
-
-        Ok(Herd { cows })
-    }
-
-    pub fn cows(&self) -> &[Cow] {
-        &self.cows
-    }
-}
-
 #[derive(Clone)]
-pub struct CowStatus {
-    name: VisibleName,
-    first_seen: Option<DateTime>,
-    last_seen: Option<DateTime>,
-    last_checked: Option<DateTime>,
-}
-
-impl CowStatus {
-    pub fn new(name: VisibleName) -> Self {
-        Self {
-            name,
-            first_seen: None,
-            last_seen: None,
-            last_checked: None,
-        }
-    }
-
-    pub fn new_from_history(
-        name: VisibleName,
-        first_seen: Option<DateTime>,
-        last_seen: Option<DateTime>,
-        last_checked: Option<DateTime>,
-    ) -> Self {
-        Self {
-            name,
-            first_seen,
-            last_seen,
-            last_checked,
-        }
-    }
-
-    pub fn should_check(&self) -> bool {
-        if let Some(last_checked) = &self.last_checked {
-            let duration = if self.first_seen.is_none() {
-                Duration::new_from_minutes(
-                    CHECK_COW_WHICH_WAS_NEVER_SEEN_IF_NOT_CHECKED_FOR_MINUTES,
-                )
-            } else {
-                Duration::new_from_hours(CHECK_COW_IF_NOT_CHECKED_FOR_HOURS)
-            };
-            return &DateTime::now() - last_checked > duration;
-        }
-        true
-    }
-
-    pub fn mark_as_ok(&mut self) {
-        let now = DateTime::now();
-
-        if self.first_seen.is_none() {
-            self.first_seen = Some(now.clone());
-        }
-
-        self.last_seen = Some(now.clone());
-        self.last_checked = Some(now.clone());
-    }
-
-    pub fn mark_as_missing(&mut self) {
-        let now = DateTime::now();
-        self.last_checked = Some(now.clone());
-    }
-
-    pub fn name(&self) -> &VisibleName {
-        &self.name
-    }
-
-    pub fn first_seen(&self) -> Option<&DateTime> {
-        self.first_seen.as_ref()
-    }
-
-    pub fn last_seen(&self) -> Option<&DateTime> {
-        self.last_seen.as_ref()
-    }
-
-    pub fn last_checked(&self) -> Option<&DateTime> {
-        self.last_checked.as_ref()
-    }
-}
-
-#[derive(Clone)]
-pub struct CensoredCowStatus {
+pub struct CensoredCow {
     name: Name,
     character: Character,
     first_seen: Option<DateTime>,
@@ -251,14 +214,14 @@ pub struct CensoredCowStatus {
     last_checked: Option<DateTime>,
 }
 
-impl CensoredCowStatus {
-    pub fn new(cow: &Cow, cow_status: &CowStatus) -> Result<Self> {
+impl CensoredCow {
+    pub fn new(cow: &Cow) -> Result<Self> {
         Ok(Self {
             name: Name::new(cow)?,
             character: cow.character().clone(),
-            first_seen: cow_status.first_seen.clone(),
-            last_seen: cow_status.last_seen.clone(),
-            last_checked: cow_status.last_checked.clone(),
+            first_seen: cow.first_seen.clone(),
+            last_seen: cow.last_seen.clone(),
+            last_checked: cow.last_checked.clone(),
         })
     }
 
@@ -382,28 +345,6 @@ mod tests {
     }
 
     #[test]
-    fn duplicate_cows_in_herd_are_detected_even_if_they_are_not_next_to_each_other() {
-        let cow1 = Cow::new(
-            VisibleName::new("http://example.com/cow.txt").unwrap(),
-            Character::Brave,
-        )
-        .unwrap();
-        let cow2 = Cow::new(
-            VisibleName::new("http://example.org/cow.txt").unwrap(),
-            Character::Brave,
-        )
-        .unwrap();
-        let cow3 = Cow::new(
-            VisibleName::new("http://example.com/cow.txt").unwrap(),
-            Character::Brave,
-        )
-        .unwrap();
-
-        let herd_result = Herd::new(vec![cow1, cow2, cow3]);
-        assert!(herd_result.is_err());
-    }
-
-    #[test]
     fn test_censored_name() {
         struct CensoredNameTestCase {
             input: &'static str,
@@ -476,7 +417,7 @@ mod tests {
 
         for test_case in test_cases {
             let visible_name = VisibleName::new(test_case.input.to_string()).unwrap();
-            let cow = Cow::new(visible_name, test_case.character).unwrap();
+            let cow = Cow::new(visible_name, test_case.character);
             let name = Name::new(&cow).unwrap();
             let actual_url = match name {
                 Name::Visible(v) => v.url().to_string(),

@@ -83,10 +83,11 @@ pub trait Metrics {
 }
 
 pub trait Inventory {
-    fn get(&self, name: &domain::VisibleName) -> Result<Option<domain::CowStatus>>;
+    fn get(&self, name: &domain::VisibleName) -> Result<Option<domain::Cow>>;
+    fn list(&self) -> Result<Vec<domain::Cow>>;
     fn update<F>(&self, name: &domain::VisibleName, f: F) -> Result<()>
     where
-        F: FnOnce(Option<domain::CowStatus>) -> Result<Option<domain::CowStatus>>;
+        F: FnOnce(Option<domain::Cow>) -> Result<Option<domain::Cow>>;
 }
 
 pub trait CowTxtDownloader {
@@ -108,10 +109,10 @@ impl Herd {
     }
 }
 
-impl TryFrom<Vec<domain::CensoredCowStatus>> for Herd {
+impl TryFrom<Vec<domain::CensoredCow>> for Herd {
     type Error = Error;
 
-    fn try_from(value: Vec<domain::CensoredCowStatus>) -> Result<Self> {
+    fn try_from(value: Vec<domain::CensoredCow>) -> Result<Self> {
         let cows: Result<Vec<_>> = value.iter().map(Cow::try_from).collect();
         Ok(Self { cows: cows? })
     }
@@ -142,10 +143,10 @@ impl Cow {
     }
 }
 
-impl TryFrom<&domain::CensoredCowStatus> for Cow {
+impl TryFrom<&domain::CensoredCow> for Cow {
     type Error = Error;
 
-    fn try_from(value: &domain::CensoredCowStatus) -> Result<Self> {
+    fn try_from(value: &domain::CensoredCow) -> Result<Self> {
         Ok(Self {
             name: value.name().clone(),
             character: value.character().clone(),
@@ -170,7 +171,7 @@ impl CowStatus {
         ]
     }
 
-    fn new(cow_status: &domain::CensoredCowStatus) -> Self {
+    fn new(cow_status: &domain::CensoredCow) -> Self {
         if cow_status.last_checked().is_none() {
             return CowStatus::HaveNotCheckedYet;
         }

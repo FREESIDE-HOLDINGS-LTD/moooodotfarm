@@ -3,9 +3,8 @@ pub mod database;
 use crate::app;
 use crate::app::{ApplicationHandlerCallResult, Herd};
 use crate::config::{Config, Environment};
-use crate::domain;
 use crate::domain::time::Duration;
-use crate::domain::{Cow, CowTxt, VisibleName};
+use crate::domain::{CowTxt, VisibleName};
 use crate::errors::Result;
 use anyhow::anyhow;
 use prometheus::{CounterVec, GaugeVec, HistogramOpts, HistogramVec, Opts, Registry, labels};
@@ -36,34 +35,17 @@ struct TomlConfig {
     grpc_address: String,
     environment: String,
     database_path: String,
-    cows: Vec<TomlCow>,
-}
-
-#[derive(Deserialize)]
-struct TomlCow {
-    name: String,
-    character: String,
 }
 
 impl TryFrom<TomlConfig> for Config {
     type Error = crate::errors::Error;
 
     fn try_from(value: TomlConfig) -> std::result::Result<Self, Self::Error> {
-        let cows = value
-            .cows
-            .into_iter()
-            .map(|toml_cow| {
-                let character = toml_cow.character.try_into()?;
-                let name = domain::VisibleName::new(toml_cow.name)?;
-                Cow::new(name, character)
-            })
-            .collect::<Result<Vec<_>>>()?;
         Config::new(
             value.http_address,
             value.grpc_address,
             value.environment.try_into()?,
             value.database_path,
-            cows,
         )
     }
 }
@@ -76,18 +58,6 @@ impl TryFrom<String> for Environment {
             "production" => Ok(Environment::Production),
             "development" => Ok(Environment::Development),
             other => Err(anyhow!("invalid environment: {}", other).into()),
-        }
-    }
-}
-
-impl TryFrom<String> for crate::domain::Character {
-    type Error = crate::errors::Error;
-
-    fn try_from(value: String) -> std::result::Result<Self, Self::Error> {
-        match value.as_str() {
-            "brave" => Ok(crate::domain::Character::Brave),
-            "shy" => Ok(crate::domain::Character::Shy),
-            other => Err(anyhow!("invalid character: {}", other).into()),
         }
     }
 }
@@ -220,21 +190,15 @@ impl app::CowTxtDownloader for CowTxtDownloader {
 mod tests {
     use super::*;
     use crate::config::Config;
-    use crate::domain::VisibleName;
     use crate::fixtures;
 
     #[test]
     fn loads_config_from_file_successfully() -> Result<()> {
-        use crate::domain::Character;
         let expected_config = Config::new(
             "0.0.0.0:8080",
             "0.0.0.0:9090",
             Environment::Development,
             "/moooodotfarm.db",
-            vec![Cow::new(
-                VisibleName::new("https://moooo.farm/cow.txt")?,
-                Character::Brave,
-            )?],
         )?;
         let loader = ConfigLoader::new(fixtures::test_file_path(
             "src/adapters/testdata/config.toml",

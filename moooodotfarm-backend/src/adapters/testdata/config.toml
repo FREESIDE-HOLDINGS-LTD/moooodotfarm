@@ -2,7 +2,3 @@ http_address = "0.0.0.0:8080"
 grpc_address = "0.0.0.0:9090"
 environment = "development"
 database_path = "/moooodotfarm.db"
-
-[[cows]]
-name = "https://moooo.farm/cow.txt"
-character = "brave"
