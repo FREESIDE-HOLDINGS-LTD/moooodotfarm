@@ -2,16 +2,16 @@ use clap::{Command, arg};
 use env_logger::Env;
 use log::error;
 use moooodotfarm_backend::adapters::{ConfigLoader, database};
-use moooodotfarm_backend::app::CowTxtDownloader;
 use moooodotfarm_backend::app::add_cow::AddCowHandler;
 use moooodotfarm_backend::app::change_cow_character::ChangeCowCharacterHandler;
 use moooodotfarm_backend::app::get_herd::GetHerdHandler;
 use moooodotfarm_backend::app::update::UpdateHandler;
 use moooodotfarm_backend::config::Config;
-use moooodotfarm_backend::domain::VisibleName;
 use moooodotfarm_backend::errors::Result;
-use moooodotfarm_backend::ports::grpc::generated::GetHerdRequest;
 use moooodotfarm_backend::ports::grpc::generated::moooodotfarm_service_client::MoooodotfarmServiceClient;
+use moooodotfarm_backend::ports::grpc::generated::{
+    AddCowRequest, ChangeCowCharacterRequest, GetHerdRequest,
+};
 use moooodotfarm_backend::ports::timers;
 use moooodotfarm_backend::ports::{grpc, http};
 use moooodotfarm_backend::{adapters, app};
@@ -27,12 +27,19 @@ fn cli() -> Command {
                 .about("Runs the program")
                 .arg(arg!(<CONFIG> "Path to the configuration file")),
         )
-        .subcommand(
-            Command::new("check")
-                .about("Checks up on a cow")
-                .arg(arg!(<URL> "URL of the cow")),
-        )
         .subcommand(Command::new("get_herd").about("Fetches the herd over gRPC"))
+        .subcommand(
+            Command::new("add_cow")
+                .about("Adds a cow over gRPC")
+                .arg(arg!(<NAME> "Name/URL of the cow"))
+                .arg(arg!(<CHARACTER> "Character of the cow (brave/shy)")),
+        )
+        .subcommand(
+            Command::new("change_cow_character")
+                .about("Changes a cow's character over gRPC")
+                .arg(arg!(<NAME> "Name/URL of the cow"))
+                .arg(arg!(<CHARACTER> "New character of the cow (brave/shy)")),
+        )
 }
 
 #[tokio::main]
@@ -45,12 +52,18 @@ async fn main() -> Result<()> {
             let config_file_path = sub_matches.try_get_one::<String>("CONFIG")?.unwrap();
             run(config_file_path).await?;
         }
-        Some(("check", sub_matches)) => {
-            let url = sub_matches.try_get_one::<String>("URL")?.unwrap();
-            check(url).await?;
-        }
         Some(("get_herd", _sub_matches)) => {
             get_herd().await?;
+        }
+        Some(("add_cow", sub_matches)) => {
+            let name = sub_matches.try_get_one::<String>("NAME")?.unwrap();
+            let character = sub_matches.try_get_one::<String>("CHARACTER")?.unwrap();
+            add_cow(name, character).await?;
+        }
+        Some(("change_cow_character", sub_matches)) => {
+            let name = sub_matches.try_get_one::<String>("NAME")?.unwrap();
+            let character = sub_matches.try_get_one::<String>("CHARACTER")?.unwrap();
+            change_cow_character(name, character).await?;
         }
         _ => unreachable!(),
     }
@@ -70,15 +83,6 @@ async fn run(config_file_path: &str) -> Result<()> {
     Ok(())
 }
 
-async fn check(url: &str) -> Result<()> {
-    let downloader = adapters::CowTxtDownloader::new();
-    let name = VisibleName::new(url)?;
-    let cow_txt = downloader.download(&name).await?;
-    println!("{}", cow_txt);
-    println!("Cow is ok!");
-    Ok(())
-}
-
 async fn get_herd() -> Result<()> {
     let mut client = get_client().await?;
     let response = client.get_herd(GetHerdRequest {}).await?;
@@ -89,6 +93,30 @@ async fn get_herd() -> Result<()> {
         }
     }
 
+    Ok(())
+}
+
+async fn add_cow(name: &str, character: &str) -> Result<()> {
+    let mut client = get_client().await?;
+    client
+        .add_cow(AddCowRequest {
+            name: name.to_string(),
+            character: character.to_string(),
+        })
+        .await?;
+    println!("Cow added successfully!");
+    Ok(())
+}
+
+async fn change_cow_character(name: &str, character: &str) -> Result<()> {
+    let mut client = get_client().await?;
+    client
+        .change_cow_character(ChangeCowCharacterRequest {
+            name: name.to_string(),
+            character: character.to_string(),
+        })
+        .await?;
+    println!("Cow character changed successfully!");
     Ok(())
 }
 

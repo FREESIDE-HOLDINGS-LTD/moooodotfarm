@@ -1391,7 +1391,6 @@ dependencies = [
  "http",
  "include_dir",
  "log",
- "moooodotfarm-macros",
  "prometheus",
  "prost",
  "redb",
@@ -1407,14 +1406,6 @@ dependencies = [
  "tower 0.5.2",
  "tower-http",
  "url",
-]
-
-[[package]]
-name = "moooodotfarm-macros"
-version = "0.1.0"
-dependencies = [
- "quote",
- "syn",
 ]
 
 [[package]]

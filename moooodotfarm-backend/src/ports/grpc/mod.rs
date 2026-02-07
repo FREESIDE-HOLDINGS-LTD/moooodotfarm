@@ -94,7 +94,8 @@ where
         let payload = request.into_inner();
         let name = domain::VisibleName::new(payload.name)
             .map_err(|err| Status::invalid_argument(err.to_string()))?;
-        let character = parse_character(&payload.character)?;
+        let character = parse_character(&payload.character)
+            .map_err(|err| Status::invalid_argument(err.to_string()))?;
         let command = app::AddCow::new(name, character);
 
         self.deps
@@ -113,7 +114,8 @@ where
         let payload = request.into_inner();
         let name = domain::VisibleName::new(payload.name)
             .map_err(|err| Status::invalid_argument(err.to_string()))?;
-        let character = parse_character(&payload.character)?;
+        let character = parse_character(&payload.character)
+            .map_err(|err| Status::invalid_argument(err.to_string()))?;
         let command = app::ChangeCowCharacter::new(name, character);
 
         self.deps
@@ -163,12 +165,10 @@ impl From<&app::Cow> for Cow {
     }
 }
 
-fn parse_character(value: &str) -> std::result::Result<Character, Status> {
+fn parse_character(value: &str) -> Result<Character> {
     match value {
         "brave" => Ok(Character::Brave),
         "shy" => Ok(Character::Shy),
-        other => Err(Status::invalid_argument(format!(
-            "invalid character: {other}"
-        ))),
+        other => Err(Error::Unknown(anyhow!("invalid character: {other}"))),
     }
 }

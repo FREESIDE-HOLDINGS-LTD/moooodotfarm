@@ -37,15 +37,21 @@ impl Database {
             let mut migrated = Vec::new();
             for row in table.iter()? {
                 let (key, value) = row?;
-                let old: OldPersistedCow = serde_json::from_str(&value.value())?;
-                let new = PersistedCow {
-                    name: old.cow,
-                    character: (&Character::Shy).into(),
-                    first_seen: old.first_seen,
-                    last_seen: old.last_seen,
-                    last_checked: old.last_checked,
-                };
-                migrated.push((key.value().to_string(), new));
+                let try_old: std::result::Result<OldPersistedCow, _> = serde_json::from_str(&value.value());
+                if let Ok(old) = try_old {
+                    let new = PersistedCow {
+                        name: old.cow,
+                        character: (&Character::Shy).into(),
+                        first_seen: old.first_seen,
+                        last_seen: old.last_seen,
+                        last_checked: old.last_checked,
+                    };
+                    migrated.push((key.value().to_string(), new));
+                } else if serde_json::from_str::<PersistedCow>(&value.value()).is_ok() {
+                    continue;
+                } else {
+                    return Err(anyhow!("Failed to parse cow entry for key {}", key.value()).into());
+                }
             }
 
             for (key, persisted) in migrated {
@@ -82,7 +88,23 @@ impl app::Inventory for Database {
     }
 
     fn list(&self) -> Result<Vec<Cow>> {
-        todo!()
+        let db = self.db.lock().unwrap();
+        let read_txn = db.begin_read()?;
+        let mut cows = Vec::new();
+        match read_txn.open_table(COW_STATUS_TABLE) {
+            Ok(table) => {
+                for row in table.iter()? {
+                    let (_key, value) = row?;
+                    let persisted: PersistedCow = serde_json::from_str(&value.value())?;
+                    cows.push(persisted.try_into()?);
+                }
+                Ok(cows)
+            }
+            Err(e) => match e {
+                redb::TableError::TableDoesNotExist(_a) => Ok(Vec::new()),
+                other => Err(other.into()),
+            },
+        }
     }
 
     fn update<F>(&self, name: &VisibleName, f: F) -> Result<()>

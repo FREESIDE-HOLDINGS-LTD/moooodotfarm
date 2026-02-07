@@ -1,6 +1,5 @@
 pub mod add_cow;
 pub mod change_cow_character;
-pub mod check_cow;
 pub mod get_herd;
 pub mod update;
 
@@ -18,10 +17,6 @@ pub trait GetHerdHandler {
     fn get_herd(&self) -> Result<Herd>;
 }
 
-pub trait CheckCowHandler {
-    async fn check_cow(&self, v: &CheckCow) -> Result<CheckCowResult<'_>>;
-}
-
 #[async_trait]
 pub trait AddCowHandler: Send + Sync {
     async fn add_cow(&self, v: &AddCow) -> Result<()>;
@@ -30,34 +25,6 @@ pub trait AddCowHandler: Send + Sync {
 #[async_trait]
 pub trait ChangeCowCharacterHandler: Send + Sync {
     async fn change_cow_character(&self, v: &ChangeCowCharacter) -> Result<()>;
-}
-
-pub struct CheckCow {
-    name: domain::VisibleName,
-}
-
-impl CheckCow {
-    pub fn new(name: domain::VisibleName) -> Self {
-        Self { name }
-    }
-
-    pub fn name(&self) -> &domain::VisibleName {
-        &self.name
-    }
-}
-
-pub struct CheckCowResult<'a> {
-    cow_txt: domain::CowTxt<'a>,
-}
-
-impl<'a> CheckCowResult<'a> {
-    pub fn new(cow_txt: domain::CowTxt<'a>) -> Self {
-        Self { cow_txt }
-    }
-
-    pub fn cow_txt(&self) -> &domain::CowTxt<'a> {
-        &self.cow_txt
-    }
 }
 
 pub struct AddCow {
