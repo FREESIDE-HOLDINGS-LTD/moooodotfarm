@@ -95,4 +95,22 @@ impl From<serde_json::Error> for Error {
     }
 }
 
+impl From<tonic::Status> for Error {
+    fn from(value: tonic::Status) -> Self {
+        Error::Unknown(anyhow!(value))
+    }
+}
+
+impl From<std::env::VarError> for Error {
+    fn from(value: std::env::VarError) -> Self {
+        Error::Unknown(anyhow!(value))
+    }
+}
+
+impl From<tonic::transport::Error> for Error {
+    fn from(value: tonic::transport::Error) -> Self {
+        Error::Unknown(anyhow!(value))
+    }
+}
+
 pub type Result<T> = std::result::Result<T, Error>;

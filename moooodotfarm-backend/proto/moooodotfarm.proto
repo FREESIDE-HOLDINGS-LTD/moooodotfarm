@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package moooodotfarm.grpc;
+
+service MoooodotfarmService {
+  rpc GetHerd (GetHerdRequest) returns (GetHerdResponse);
+}
+
+message GetHerdRequest {}
+
+message GetHerdResponse {
+  Herd herd = 1;
+}
+
+message Herd {
+  repeated Cow cows = 1;
+}
+
+message Cow {
+  string name = 1;
+  string character = 2;
+  string last_seen = 3;
+  string status = 4;
+}

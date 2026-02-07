@@ -32,7 +32,8 @@ impl ConfigLoader {
 
 #[derive(Deserialize)]
 struct TomlConfig {
-    address: String,
+    http_address: String,
+    grpc_address: String,
     environment: String,
     database_path: String,
     cows: Vec<TomlCow>,
@@ -58,7 +59,8 @@ impl TryFrom<TomlConfig> for Config {
             })
             .collect::<Result<Vec<_>>>()?;
         Config::new(
-            value.address,
+            value.http_address,
+            value.grpc_address,
             value.environment.try_into()?,
             value.database_path,
             cows,
@@ -226,6 +228,7 @@ mod tests {
         use crate::domain::Character;
         let expected_config = Config::new(
             "0.0.0.0:8080",
+            "0.0.0.0:9090",
             Environment::Development,
             "/moooodotfarm.db",
             vec![Cow::new(

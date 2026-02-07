@@ -65,7 +65,7 @@ where
             )
             .with_state(self.deps.clone());
 
-        let listener = tokio::net::TcpListener::bind(self.config.address()).await?;
+        let listener = tokio::net::TcpListener::bind(self.config.http_address()).await?;
         axum::serve(listener, app).await?;
         Ok(())
     }

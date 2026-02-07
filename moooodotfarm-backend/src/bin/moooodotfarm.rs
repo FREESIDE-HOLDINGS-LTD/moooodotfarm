@@ -8,8 +8,10 @@ use moooodotfarm_backend::app::update::UpdateHandler;
 use moooodotfarm_backend::config::Config;
 use moooodotfarm_backend::domain::VisibleName;
 use moooodotfarm_backend::errors::Result;
-use moooodotfarm_backend::ports::http;
+use moooodotfarm_backend::ports::grpc::generated::GetHerdRequest;
+use moooodotfarm_backend::ports::grpc::generated::moooodotfarm_service_client::MoooodotfarmServiceClient;
 use moooodotfarm_backend::ports::timers;
+use moooodotfarm_backend::ports::{grpc, http};
 use moooodotfarm_backend::{adapters, app, domain};
 use prometheus::Registry;
 
@@ -28,6 +30,7 @@ fn cli() -> Command {
                 .about("Checks up on a cow")
                 .arg(arg!(<URL> "URL of the cow")),
         )
+        .subcommand(Command::new("get_herd").about("Fetches the herd over gRPC"))
 }
 
 #[tokio::main]
@@ -44,6 +47,9 @@ async fn main() -> Result<()> {
             let url = sub_matches.try_get_one::<String>("URL")?.unwrap();
             check(url).await?;
         }
+        Some(("get_herd", _sub_matches)) => {
+            get_herd().await?;
+        }
         _ => unreachable!(),
     }
 
@@ -51,16 +57,14 @@ async fn main() -> Result<()> {
 }
 
 async fn run(config_file_path: &str) -> Result<()> {
-    let config = &ConfigLoader::new(config_file_path).load()?;
-    let service = Service::new(config)?;
+    let config = ConfigLoader::new(config_file_path).load()?;
+    let service = Service::new(&config)?;
 
-    tokio::spawn({
-        async move {
-            service.update_timer.run().await;
-        }
-    });
-
-    server_loop(&service.http_server).await;
+    tokio::join!(
+        service.update_timer.run(),
+        http_server_loop(&service.http_server),
+        grpc_server_loop(&service.grpc_server)
+    );
     Ok(())
 }
 
@@ -73,7 +77,28 @@ async fn check(url: &str) -> Result<()> {
     Ok(())
 }
 
-async fn server_loop<'a, D>(server: &http::Server<'a, D>)
+async fn get_herd() -> Result<()> {
+    let mut client = get_client().await?;
+    let response = client.get_herd(GetHerdRequest {}).await?;
+
+    if let Some(herd) = response.into_inner().herd {
+        for cow in herd.cows {
+            println!("{}", cow.name);
+        }
+    }
+
+    Ok(())
+}
+
+async fn get_client() -> Result<MoooodotfarmServiceClient<tonic::transport::Channel>> {
+    let grpc_address = std::env::var("MOOOODOTFARM_GRPC_ADDRESS")?;
+    let endpoint = format!("http://{}", grpc_address);
+
+    let client = MoooodotfarmServiceClient::connect(endpoint).await?;
+    Ok(client)
+}
+
+async fn http_server_loop<'a, D>(server: &http::Server<'a, D>)
 where
     D: http::Deps + Sync + Send + Clone + 'static,
 {
@@ -84,6 +109,22 @@ where
             }
             Err(err) => {
                 error!("the server exited with an error: {err}")
+            }
+        }
+    }
+}
+
+async fn grpc_server_loop<'a, D>(server: &grpc::GrpcServer<'a, D>)
+where
+    D: grpc::Deps + Sync + Send + Clone + 'static,
+{
+    loop {
+        match server.run().await {
+            Ok(_) => {
+                error!("the grpc server exited without returning any errors")
+            }
+            Err(err) => {
+                error!("the grpc server exited with an error: {err}")
             }
         }
     }
@@ -117,15 +158,38 @@ where
     }
 }
 
+#[derive(Clone)]
+struct GrpcDeps<GHH> {
+    get_herd_handler: GHH,
+}
+
+impl<GHH> GrpcDeps<GHH> {
+    pub fn new(get_herd_handler: GHH) -> Self {
+        Self { get_herd_handler }
+    }
+}
+
+impl<GHH> grpc::Deps for GrpcDeps<GHH>
+where
+    GHH: app::GetHerdHandler,
+{
+    fn get_herd_handler(&self) -> &impl app::GetHerdHandler {
+        &self.get_herd_handler
+    }
+}
+
 type GetHerdHandlerImpl = GetHerdHandler<database::Database, adapters::Metrics>;
 type UpdateHandlerImpl =
     UpdateHandler<database::Database, adapters::CowTxtDownloader, adapters::Metrics>;
 type HttpDepsImpl = HttpDeps<GetHerdHandlerImpl>;
 type HttpServerImpl<'a> = http::Server<'a, HttpDepsImpl>;
+type GrpcDepsImpl = GrpcDeps<GetHerdHandlerImpl>;
+type GrpcServerImpl<'a> = grpc::GrpcServer<'a, GrpcDepsImpl>;
 type UpdateTimerImpl = timers::UpdateTimer<UpdateHandlerImpl>;
 
 struct Service<'a> {
     http_server: HttpServerImpl<'a>,
+    grpc_server: GrpcServerImpl<'a>,
     update_timer: UpdateTimerImpl,
 }
 
@@ -149,10 +213,13 @@ impl<'a> Service<'a> {
 
         let timer = timers::UpdateTimer::new(update_handler.clone());
         let http_deps = HttpDeps::new(get_herd_handler.clone(), metrics);
-        let server = http::Server::new(config, http_deps);
+        let grpc_deps = GrpcDeps::new(get_herd_handler.clone());
+        let http_server = http::Server::new(config, http_deps);
+        let grpc_server = grpc::GrpcServer::new(config, grpc_deps);
 
         Ok(Self {
-            http_server: server,
+            http_server,
+            grpc_server,
             update_timer: timer,
         })
     }
