@@ -31,6 +31,8 @@ where
 {
     #[application_handler]
     async fn handle(&self) -> Result<()> {
+        let mut censored_statuses = vec![];
+
         for cow in self.herd.cows() {
             let mut status = self.get_or_create_cow_status(cow.name())?;
             if !status.should_check() {
@@ -47,11 +49,14 @@ where
                 }
             }
 
+            let censored_status = domain::CensoredCowStatus::new(cow, &status)?;
+            censored_statuses.push(censored_status);
+
             self.inventory.put(status)?;
         }
 
-        // let herd: Herd = self.rancher.get_cow_statuses()?.try_into()?;
-        // self.metrics.update_herd_numbers(&herd);
+        let herd: app::Herd = censored_statuses.try_into()?;
+        self.metrics.update_herd_numbers(&herd);
 
         Ok::<(), Error>(())
     }
