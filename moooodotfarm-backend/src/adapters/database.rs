@@ -4,7 +4,7 @@ use crate::errors::Result;
 use crate::{app, domain};
 use anyhow::Context;
 use redb;
-use redb::ReadableDatabase;
+use redb::{ReadableDatabase, ReadableTable};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
@@ -48,16 +48,32 @@ impl app::Inventory for Database {
         }
     }
 
-    fn put(&self, cow_status: CowStatus) -> Result<()> {
+    fn update<F>(&self, name: &VisibleName, f: F) -> Result<()>
+    where
+        F: FnOnce(Option<domain::CowStatus>) -> Result<Option<domain::CowStatus>>,
+    {
         let db = self.db.lock().unwrap();
 
         let write_txn = db.begin_write()?;
         {
             let mut table = write_txn.open_table(COW_STATUS_TABLE)?;
-            let key = cow_status.name().url().to_string();
-            let persisted: PersistedCowStatus = cow_status.into();
-            let j = serde_json::to_string(&persisted)?;
-            table.insert(key, j)?;
+            let key = name.url().to_string();
+
+            let cow_status: Option<domain::CowStatus> = match table.get(&key)? {
+                Some(v) => {
+                    let persisted: PersistedCowStatus = serde_json::from_str(&v.value())?;
+                    Some(persisted.try_into()?)
+                }
+                None => None,
+            };
+
+            let new_cow_status = f(cow_status)?;
+
+            if let Some(new_cow_status) = new_cow_status {
+                let persisted: PersistedCowStatus = new_cow_status.into();
+                let j = serde_json::to_string(&persisted)?;
+                table.insert(key, j)?;
+            }
         }
         Ok(write_txn.commit()?)
     }

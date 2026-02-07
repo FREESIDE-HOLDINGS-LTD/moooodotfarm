@@ -24,7 +24,7 @@ where
     M: Metrics,
 {
     #[application_handler]
-    async fn check_cow(&self, v: CheckCow) -> Result<CheckCowResult<'_>> {
+    async fn check_cow(&self, v: &CheckCow) -> Result<CheckCowResult<'_>> {
         let cow_txt = self.downloader.download(v.name()).await?;
         Ok::<CheckCowResult<'_>, Error>(CheckCowResult::new(cow_txt))
     }

@@ -2,6 +2,7 @@ use crate::app::{CowTxtDownloader, Inventory, Metrics};
 use crate::domain::VisibleName;
 use crate::errors::{Error, Result};
 use crate::{app, domain};
+use anyhow::anyhow;
 use moooodotfarm_macros::application_handler;
 
 #[derive(Clone)]
@@ -34,25 +35,31 @@ where
         let mut censored_statuses = vec![];
 
         for cow in self.herd.cows() {
-            let mut status = self.get_or_create_cow_status(cow.name())?;
+            let status = self.get_or_create_cow_status(cow.name())?;
             if !status.should_check() {
                 continue;
             }
 
-            match self.downloader.download(cow.name()).await {
-                Ok(_) => {
-                    status.mark_as_ok();
-                }
-                Err(err) => {
-                    log::warn!("cow is missing {}: {}", cow, err);
-                    status.mark_as_missing();
-                }
-            }
+            let result = self.downloader.download(cow.name()).await;
 
-            let censored_status = domain::CensoredCowStatus::new(cow, &status)?;
-            censored_statuses.push(censored_status);
+            self.inventory.update(cow.name(), |status| {
+                let mut status =
+                    status.ok_or_else(|| anyhow!("cow status not found for {}", cow))?;
+                match result {
+                    Ok(_) => {
+                        status.mark_as_ok();
+                    }
+                    Err(err) => {
+                        log::warn!("cow is missing {}: {}", cow, err);
+                        status.mark_as_missing();
+                    }
+                }
 
-            self.inventory.put(status)?;
+                let censored_status = domain::CensoredCowStatus::new(cow, &status)?;
+                censored_statuses.push(censored_status);
+
+                Ok(Some(status))
+            })?;
         }
 
         let herd: app::Herd = censored_statuses.try_into()?;

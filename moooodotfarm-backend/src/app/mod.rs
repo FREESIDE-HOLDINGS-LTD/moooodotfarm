@@ -1,3 +1,4 @@
+pub mod add_cow;
 pub mod check_cow;
 pub mod get_herd;
 pub mod update;
@@ -13,6 +14,14 @@ pub trait UpdateHandler {
 
 pub trait GetHerdHandler {
     fn get_herd(&self) -> Result<Herd>;
+}
+
+pub trait CheckCowHandler {
+    async fn check_cow(&self, v: &CheckCow) -> Result<CheckCowResult<'_>>;
+}
+
+pub trait AddCowHandler {
+    async fn add_cow(&self, v: &AddCow) -> Result<()>;
 }
 
 pub struct CheckCow {
@@ -43,8 +52,23 @@ impl<'a> CheckCowResult<'a> {
     }
 }
 
-pub trait CheckCowHandler {
-    async fn check_cow(&self, v: CheckCow) -> Result<CheckCowResult<'_>>;
+pub struct AddCow {
+    name: domain::VisibleName,
+    character: Character,
+}
+
+impl AddCow {
+    pub fn new(name: domain::VisibleName, character: Character) -> Self {
+        Self { name, character }
+    }
+
+    pub fn name(&self) -> &domain::VisibleName {
+        &self.name
+    }
+
+    pub fn character(&self) -> &Character {
+        &self.character
+    }
 }
 
 pub trait Metrics {
@@ -60,7 +84,9 @@ pub trait Metrics {
 
 pub trait Inventory {
     fn get(&self, name: &domain::VisibleName) -> Result<Option<domain::CowStatus>>;
-    fn put(&self, status: domain::CowStatus) -> Result<()>;
+    fn update<F>(&self, name: &domain::VisibleName, f: F) -> Result<()>
+    where
+        F: FnOnce(Option<domain::CowStatus>) -> Result<Option<domain::CowStatus>>;
 }
 
 pub trait CowTxtDownloader {
