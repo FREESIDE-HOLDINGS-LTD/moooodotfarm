@@ -51,37 +51,16 @@ async fn main() -> Result<()> {
 }
 
 async fn run(config_file_path: &str) -> Result<()> {
-    let config_loader = ConfigLoader::new(config_file_path);
-    let config = config_loader.load()?;
-
-    let metrics = adapters::Metrics::new()?;
-
-    let database = database::Database::new(config.database_path())?;
-    let downloader = adapters::CowTxtDownloader::new();
-
-    let cows = config.cows().to_vec();
-    let herd = domain::Herd::new(cows)?;
-
-    let update_handler = UpdateHandler::new(
-        herd.clone(),
-        database.clone(),
-        downloader.clone(),
-        metrics.clone(),
-    );
-    let get_herd_handler = GetHerdHandler::new(herd.clone(), database.clone(), metrics.clone());
-
-    let mut timer = timers::UpdateTimer::new(update_handler);
-    let server = http::Server::new();
+    let config = &ConfigLoader::new(config_file_path).load()?;
+    let service = Service::new(config)?;
 
     tokio::spawn({
         async move {
-            timer.run().await;
+            service.update_timer.run().await;
         }
     });
 
-    let http_deps = HttpDeps::new(get_herd_handler, metrics);
-
-    server_loop(&server, &config, http_deps).await;
+    server_loop(&service.http_server).await;
     Ok(())
 }
 
@@ -94,12 +73,12 @@ async fn check(url: &str) -> Result<()> {
     Ok(())
 }
 
-async fn server_loop<D>(server: &http::Server, config: &Config, deps: D)
+async fn server_loop<'a, D>(server: &http::Server<'a, D>)
 where
     D: http::Deps + Sync + Send + Clone + 'static,
 {
     loop {
-        match server.run(config, deps.clone()).await {
+        match server.run().await {
             Ok(_) => {
                 error!("the server exited without returning any errors")
             }
@@ -135,5 +114,51 @@ where
 
     fn metrics(&self) -> &Registry {
         self.metrics.registry()
+    }
+}
+
+type GetHerdHandlerImpl = GetHerdHandler<database::Database, adapters::Metrics>;
+type UpdateHandlerImpl =
+    UpdateHandler<database::Database, adapters::CowTxtDownloader, adapters::Metrics>;
+type HttpDepsImpl = HttpDeps<GetHerdHandlerImpl>;
+type HttpServerImpl<'a> = http::Server<'a, HttpDepsImpl>;
+type UpdateTimerImpl = timers::UpdateTimer<UpdateHandlerImpl>;
+
+struct Service<'a> {
+    _get_herd_handler: GetHerdHandlerImpl,
+    update_handler: UpdateHandlerImpl,
+
+    http_server: HttpServerImpl<'a>,
+    update_timer: UpdateTimerImpl,
+}
+
+impl<'a> Service<'a> {
+    fn new(config: &'a Config) -> Result<Self> {
+        let metrics = adapters::Metrics::new()?;
+
+        let database = database::Database::new(config.database_path())?;
+        let downloader = adapters::CowTxtDownloader::new();
+
+        let cows = config.cows().to_vec();
+        let herd = domain::Herd::new(cows)?;
+
+        let update_handler = UpdateHandler::new(
+            herd.clone(),
+            database.clone(),
+            downloader.clone(),
+            metrics.clone(),
+        );
+        let get_herd_handler = GetHerdHandler::new(herd.clone(), database.clone(), metrics.clone());
+
+        let timer = timers::UpdateTimer::new(update_handler.clone());
+        let http_deps = HttpDeps::new(get_herd_handler.clone(), metrics);
+        let server = http::Server::new(config, http_deps);
+
+        Ok(Self {
+            _get_herd_handler: get_herd_handler,
+            update_handler,
+            http_server: server,
+            update_timer: timer,
+        })
     }
 }

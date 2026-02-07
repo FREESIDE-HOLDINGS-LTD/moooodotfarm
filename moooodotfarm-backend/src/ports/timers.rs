@@ -17,7 +17,7 @@ where
         Self { handler }
     }
 
-    pub async fn run(&mut self) {
+    pub async fn run(&self) {
         loop {
             match self.handler.handle().await {
                 Ok(_) => {

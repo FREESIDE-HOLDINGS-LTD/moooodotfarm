@@ -25,25 +25,22 @@ use tower_http::{
 
 static STATIC_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/src/ports/http/static");
 
-pub struct Server {}
-
-impl Default for Server {
-    fn default() -> Self {
-        Self::new()
-    }
+pub struct Server<'a, D> {
+    config: &'a config::Config,
+    deps: D,
 }
 
-impl Server {
-    pub fn new() -> Self {
-        Self {}
+impl<'a, D> Server<'a, D>
+where
+    D: Deps + Sync + Send + Clone + 'static,
+{
+    pub fn new(config: &'a config::Config, deps: D) -> Self {
+        Self { config, deps }
     }
 
-    pub async fn run<D>(&self, config: &config::Config, deps: D) -> Result<()>
-    where
-        D: Deps + Sync + Send + Clone + 'static,
-    {
+    pub async fn run(&self) -> Result<()> {
         let trace = TraceLayer::new_for_http();
-        let cors = match config.environment() {
+        let cors = match self.config.environment() {
             Environment::Production => CorsLayer::new(),
             Environment::Development => CorsLayer::new()
                 .allow_origin(Any)
@@ -66,9 +63,9 @@ impl Server {
                     .layer(compression.clone())
                     .layer(cors.clone()),
             )
-            .with_state(deps);
+            .with_state(self.deps.clone());
 
-        let listener = tokio::net::TcpListener::bind(config.address()).await?;
+        let listener = tokio::net::TcpListener::bind(self.config.address()).await?;
         axum::serve(listener, app).await?;
         Ok(())
     }
