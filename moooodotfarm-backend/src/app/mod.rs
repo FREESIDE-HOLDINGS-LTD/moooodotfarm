@@ -1,9 +1,10 @@
+pub mod check_cow;
 pub mod get_herd;
 pub mod update;
 
 use crate::domain;
+use crate::domain::Character;
 use crate::domain::time::{DateTime, Duration};
-use crate::domain::{Character, VisibleName};
 use crate::errors::{Error, Result};
 
 pub trait UpdateHandler {
@@ -12,6 +13,38 @@ pub trait UpdateHandler {
 
 pub trait GetHerdHandler {
     fn get_herd(&self) -> Result<Herd>;
+}
+
+pub struct CheckCow {
+    name: domain::VisibleName,
+}
+
+impl CheckCow {
+    pub fn new(name: domain::VisibleName) -> Self {
+        Self { name }
+    }
+
+    pub fn name(&self) -> &domain::VisibleName {
+        &self.name
+    }
+}
+
+pub struct CheckCowResult<'a> {
+    cow_txt: domain::CowTxt<'a>,
+}
+
+impl<'a> CheckCowResult<'a> {
+    pub fn new(cow_txt: domain::CowTxt<'a>) -> Self {
+        Self { cow_txt }
+    }
+
+    pub fn cow_txt(&self) -> &domain::CowTxt<'a> {
+        &self.cow_txt
+    }
+}
+
+pub trait CheckCowHandler {
+    async fn check_cow(&self, v: CheckCow) -> Result<CheckCowResult<'_>>;
 }
 
 pub trait Metrics {
@@ -26,7 +59,7 @@ pub trait Metrics {
 }
 
 pub trait Inventory {
-    fn get(&self, name: &VisibleName) -> Result<Option<domain::CowStatus>>;
+    fn get(&self, name: &domain::VisibleName) -> Result<Option<domain::CowStatus>>;
     fn put(&self, status: domain::CowStatus) -> Result<()>;
 }
 

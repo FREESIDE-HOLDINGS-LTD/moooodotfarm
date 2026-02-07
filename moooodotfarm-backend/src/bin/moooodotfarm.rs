@@ -125,9 +125,6 @@ type HttpServerImpl<'a> = http::Server<'a, HttpDepsImpl>;
 type UpdateTimerImpl = timers::UpdateTimer<UpdateHandlerImpl>;
 
 struct Service<'a> {
-    _get_herd_handler: GetHerdHandlerImpl,
-    update_handler: UpdateHandlerImpl,
-
     http_server: HttpServerImpl<'a>,
     update_timer: UpdateTimerImpl,
 }
@@ -155,8 +152,6 @@ impl<'a> Service<'a> {
         let server = http::Server::new(config, http_deps);
 
         Ok(Self {
-            _get_herd_handler: get_herd_handler,
-            update_handler,
             http_server: server,
             update_timer: timer,
         })
