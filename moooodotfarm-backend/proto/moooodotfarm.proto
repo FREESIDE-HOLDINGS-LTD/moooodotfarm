@@ -4,6 +4,8 @@ package moooodotfarm.grpc;
 
 service MoooodotfarmService {
   rpc GetHerd (GetHerdRequest) returns (GetHerdResponse);
+  rpc AddCow (AddCowRequest) returns (AddCowResponse);
+  rpc ChangeCowCharacter (ChangeCowCharacterRequest) returns (ChangeCowCharacterResponse);
 }
 
 message GetHerdRequest {}
@@ -22,3 +24,17 @@ message Cow {
   string last_seen = 3;
   string status = 4;
 }
+
+message AddCowRequest {
+  string name = 1;
+  string character = 2;
+}
+
+message AddCowResponse {}
+
+message ChangeCowCharacterRequest {
+  string name = 1;
+  string character = 2;
+}
+
+message ChangeCowCharacterResponse {}

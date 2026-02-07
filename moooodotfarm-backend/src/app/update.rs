@@ -1,7 +1,6 @@
 use crate::app::{CowTxtDownloader, Inventory, Metrics};
 use crate::errors::{Error, Result};
 use crate::{app, domain};
-use moooodotfarm_macros::application_handler;
 
 #[derive(Clone)]
 pub struct UpdateHandler<I, D, M> {
@@ -26,7 +25,6 @@ where
     D: CowTxtDownloader,
     M: Metrics,
 {
-    #[application_handler]
     async fn handle(&self) -> Result<()> {
         let mut censored_statuses = vec![];
 

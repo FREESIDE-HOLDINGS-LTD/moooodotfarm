@@ -3,6 +3,8 @@ use env_logger::Env;
 use log::error;
 use moooodotfarm_backend::adapters::{ConfigLoader, database};
 use moooodotfarm_backend::app::CowTxtDownloader;
+use moooodotfarm_backend::app::add_cow::AddCowHandler;
+use moooodotfarm_backend::app::change_cow_character::ChangeCowCharacterHandler;
 use moooodotfarm_backend::app::get_herd::GetHerdHandler;
 use moooodotfarm_backend::app::update::UpdateHandler;
 use moooodotfarm_backend::config::Config;
@@ -159,31 +161,55 @@ where
 }
 
 #[derive(Clone)]
-struct GrpcDeps<GHH> {
+struct GrpcDeps<GHH, ACH, CCH> {
     get_herd_handler: GHH,
+    add_cow_handler: ACH,
+    change_cow_character_handler: CCH,
 }
 
-impl<GHH> GrpcDeps<GHH> {
-    pub fn new(get_herd_handler: GHH) -> Self {
-        Self { get_herd_handler }
+impl<GHH, ACH, CCH> GrpcDeps<GHH, ACH, CCH> {
+    pub fn new(
+        get_herd_handler: GHH,
+        add_cow_handler: ACH,
+        change_cow_character_handler: CCH,
+    ) -> Self {
+        Self {
+            get_herd_handler,
+            add_cow_handler,
+            change_cow_character_handler,
+        }
     }
 }
 
-impl<GHH> grpc::Deps for GrpcDeps<GHH>
+impl<GHH, ACH, CCH> grpc::Deps for GrpcDeps<GHH, ACH, CCH>
 where
     GHH: app::GetHerdHandler,
+    ACH: app::AddCowHandler,
+    CCH: app::ChangeCowCharacterHandler,
 {
     fn get_herd_handler(&self) -> &impl app::GetHerdHandler {
         &self.get_herd_handler
+    }
+
+    fn add_cow_handler(&self) -> &impl app::AddCowHandler {
+        &self.add_cow_handler
+    }
+
+    fn change_cow_character_handler(&self) -> &impl app::ChangeCowCharacterHandler {
+        &self.change_cow_character_handler
     }
 }
 
 type GetHerdHandlerImpl = GetHerdHandler<database::Database, adapters::Metrics>;
 type UpdateHandlerImpl =
     UpdateHandler<database::Database, adapters::CowTxtDownloader, adapters::Metrics>;
+type AddCowHandlerImpl =
+    AddCowHandler<database::Database, adapters::CowTxtDownloader, adapters::Metrics>;
+type ChangeCowCharacterHandlerImpl =
+    ChangeCowCharacterHandler<database::Database, adapters::Metrics>;
 type HttpDepsImpl = HttpDeps<GetHerdHandlerImpl>;
 type HttpServerImpl<'a> = http::Server<'a, HttpDepsImpl>;
-type GrpcDepsImpl = GrpcDeps<GetHerdHandlerImpl>;
+type GrpcDepsImpl = GrpcDeps<GetHerdHandlerImpl, AddCowHandlerImpl, ChangeCowCharacterHandlerImpl>;
 type GrpcServerImpl<'a> = grpc::GrpcServer<'a, GrpcDepsImpl>;
 type UpdateTimerImpl = timers::UpdateTimer<UpdateHandlerImpl>;
 
@@ -203,10 +229,18 @@ impl<'a> Service<'a> {
         let update_handler =
             UpdateHandler::new(database.clone(), downloader.clone(), metrics.clone());
         let get_herd_handler = GetHerdHandler::new(database.clone(), metrics.clone());
+        let add_cow_handler =
+            AddCowHandler::new(database.clone(), downloader.clone(), metrics.clone());
+        let change_cow_character_handler =
+            ChangeCowCharacterHandler::new(database.clone(), metrics.clone());
 
         let timer = timers::UpdateTimer::new(update_handler.clone());
         let http_deps = HttpDeps::new(get_herd_handler.clone(), metrics);
-        let grpc_deps = GrpcDeps::new(get_herd_handler.clone());
+        let grpc_deps = GrpcDeps::new(
+            get_herd_handler.clone(),
+            add_cow_handler,
+            change_cow_character_handler,
+        );
         let http_server = http::Server::new(config, http_deps);
         let grpc_server = grpc::GrpcServer::new(config, grpc_deps);
 

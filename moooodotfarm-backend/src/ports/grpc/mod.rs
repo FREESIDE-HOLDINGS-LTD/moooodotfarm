@@ -1,4 +1,4 @@
-use crate::app::GetHerdHandler;
+use crate::app::{AddCowHandler, ChangeCowCharacterHandler, GetHerdHandler};
 use crate::config;
 use crate::errors::{Error, Result};
 use crate::{app, domain};
@@ -10,13 +10,19 @@ pub mod generated {
     tonic::include_proto!("moooodotfarm.grpc");
 }
 
+use crate::domain::Character;
 use generated::moooodotfarm_service_server::{MoooodotfarmService, MoooodotfarmServiceServer};
-use generated::{Cow, GetHerdRequest, GetHerdResponse, Herd};
+use generated::{
+    AddCowRequest, AddCowResponse, ChangeCowCharacterRequest, ChangeCowCharacterResponse, Cow,
+    GetHerdRequest, GetHerdResponse, Herd,
+};
 
 const DT_FORMAT: &str = "%Y-%m-%d %H:%M:%S %z";
 
 pub trait Deps {
-    fn get_herd_handler(&self) -> &impl app::GetHerdHandler;
+    fn get_herd_handler(&self) -> &impl GetHerdHandler;
+    fn add_cow_handler(&self) -> &impl AddCowHandler;
+    fn change_cow_character_handler(&self) -> &impl ChangeCowCharacterHandler;
 }
 
 pub struct GrpcServer<'a, D> {
@@ -80,6 +86,44 @@ where
 
         Ok(Response::new(response))
     }
+
+    async fn add_cow(
+        &self,
+        request: Request<AddCowRequest>,
+    ) -> std::result::Result<Response<AddCowResponse>, Status> {
+        let payload = request.into_inner();
+        let name = domain::VisibleName::new(payload.name)
+            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+        let character = parse_character(&payload.character)?;
+        let command = app::AddCow::new(name, character);
+
+        self.deps
+            .add_cow_handler()
+            .add_cow(&command)
+            .await
+            .map_err(|err| Status::internal(err.to_string()))?;
+
+        Ok(Response::new(AddCowResponse {}))
+    }
+
+    async fn change_cow_character(
+        &self,
+        request: Request<ChangeCowCharacterRequest>,
+    ) -> std::result::Result<Response<ChangeCowCharacterResponse>, Status> {
+        let payload = request.into_inner();
+        let name = domain::VisibleName::new(payload.name)
+            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+        let character = parse_character(&payload.character)?;
+        let command = app::ChangeCowCharacter::new(name, character);
+
+        self.deps
+            .change_cow_character_handler()
+            .change_cow_character(&command)
+            .await
+            .map_err(|err| Status::internal(err.to_string()))?;
+
+        Ok(Response::new(ChangeCowCharacterResponse {}))
+    }
 }
 
 impl From<&app::Herd> for Herd {
@@ -116,5 +160,15 @@ impl From<&app::Cow> for Cow {
             last_seen,
             status: status_str.to_string(),
         }
+    }
+}
+
+fn parse_character(value: &str) -> std::result::Result<Character, Status> {
+    match value {
+        "brave" => Ok(Character::Brave),
+        "shy" => Ok(Character::Shy),
+        other => Err(Status::invalid_argument(format!(
+            "invalid character: {other}"
+        ))),
     }
 }

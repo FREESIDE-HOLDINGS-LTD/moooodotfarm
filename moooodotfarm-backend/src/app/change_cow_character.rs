@@ -2,7 +2,7 @@ use crate::app;
 use crate::app::{Inventory, Metrics};
 use crate::errors::{Error, Result};
 use anyhow::anyhow;
-use moooodotfarm_macros::application_handler;
+use async_trait::async_trait;
 
 #[derive(Clone)]
 pub struct ChangeCowCharacterHandler<I, M> {
@@ -16,12 +16,12 @@ impl<I, M> ChangeCowCharacterHandler<I, M> {
     }
 }
 
+#[async_trait]
 impl<I, M> app::ChangeCowCharacterHandler for ChangeCowCharacterHandler<I, M>
 where
-    I: Inventory,
-    M: Metrics,
+    I: Inventory + Send + Sync,
+    M: Metrics + Send + Sync,
 {
-    #[application_handler]
     async fn change_cow_character(&self, v: &app::ChangeCowCharacter) -> Result<()> {
         self.inventory.update(v.name(), |cow| match cow {
             Some(mut cow) => {

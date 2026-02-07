@@ -33,6 +33,7 @@ timeago = "0.5.0"
 include_dir = "0.7.4"
 tonic = "0.12.3"
 prost = "0.13.5"
+async-trait = "0.1"
 
 [build-dependencies]
 tonic-build = "0.12.3"

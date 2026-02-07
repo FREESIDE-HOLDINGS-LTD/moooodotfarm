@@ -2,7 +2,7 @@ use crate::app::{CowTxtDownloader, Inventory, Metrics};
 use crate::errors::{Error, Result};
 use crate::{app, domain};
 use anyhow::anyhow;
-use moooodotfarm_macros::application_handler;
+use async_trait::async_trait;
 
 #[derive(Clone)]
 pub struct AddCowHandler<I, D, M> {
@@ -21,13 +21,13 @@ impl<I, D, M> AddCowHandler<I, D, M> {
     }
 }
 
+#[async_trait]
 impl<I, D, M> app::AddCowHandler for AddCowHandler<I, D, M>
 where
-    I: Inventory,
-    D: CowTxtDownloader,
-    M: Metrics,
+    I: Inventory + Send + Sync,
+    D: CowTxtDownloader + Send + Sync,
+    M: Metrics + Send + Sync,
 {
-    #[application_handler]
     async fn add_cow(&self, v: &app::AddCow) -> Result<()> {
         self.downloader.download(v.name()).await?;
 

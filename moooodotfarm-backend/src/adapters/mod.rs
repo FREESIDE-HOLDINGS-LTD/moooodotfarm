@@ -7,6 +7,7 @@ use crate::domain::time::Duration;
 use crate::domain::{CowTxt, VisibleName};
 use crate::errors::Result;
 use anyhow::anyhow;
+use async_trait::async_trait;
 use prometheus::{CounterVec, GaugeVec, HistogramOpts, HistogramVec, Opts, Registry, labels};
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -179,6 +180,7 @@ impl CowTxtDownloader {
     }
 }
 
+#[async_trait]
 impl app::CowTxtDownloader for CowTxtDownloader {
     async fn download(&self, name: &VisibleName) -> Result<CowTxt<'_>> {
         let cow_body = reqwest::get(name.url().to_string()).await?.text().await?;

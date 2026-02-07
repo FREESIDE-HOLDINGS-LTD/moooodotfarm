@@ -8,6 +8,7 @@ use crate::domain;
 use crate::domain::Character;
 use crate::domain::time::{DateTime, Duration};
 use crate::errors::{Error, Result};
+use async_trait::async_trait;
 
 pub trait UpdateHandler {
     async fn handle(&self) -> Result<()>;
@@ -21,11 +22,13 @@ pub trait CheckCowHandler {
     async fn check_cow(&self, v: &CheckCow) -> Result<CheckCowResult<'_>>;
 }
 
-pub trait AddCowHandler {
+#[async_trait]
+pub trait AddCowHandler: Send + Sync {
     async fn add_cow(&self, v: &AddCow) -> Result<()>;
 }
 
-pub trait ChangeCowCharacterHandler {
+#[async_trait]
+pub trait ChangeCowCharacterHandler: Send + Sync {
     async fn change_cow_character(&self, v: &ChangeCowCharacter) -> Result<()>;
 }
 
@@ -117,7 +120,8 @@ pub trait Inventory {
         F: FnOnce(Option<domain::Cow>) -> Result<Option<domain::Cow>>;
 }
 
-pub trait CowTxtDownloader {
+#[async_trait]
+pub trait CowTxtDownloader: Send + Sync {
     async fn download(&self, name: &domain::VisibleName) -> Result<domain::CowTxt<'_>>;
 }
 

@@ -1,7 +1,6 @@
 use crate::app::{Herd, Inventory, Metrics};
 use crate::errors::{Error, Result};
 use crate::{app, domain};
-use moooodotfarm_macros::application_handler;
 
 #[derive(Clone)]
 pub struct GetHerdHandler<I, M> {
@@ -20,7 +19,6 @@ where
     I: Inventory,
     M: Metrics,
 {
-    #[application_handler]
     fn get_herd(&self) -> Result<Herd> {
         let mut statuses = vec![];
         for cow in self.inventory.list()? {
