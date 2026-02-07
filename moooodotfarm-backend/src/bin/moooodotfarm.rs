@@ -2,9 +2,11 @@ use clap::{Command, arg};
 use env_logger::Env;
 use log::error;
 use moooodotfarm_backend::adapters::{ConfigLoader, database};
+use moooodotfarm_backend::app::CowTxtDownloader;
 use moooodotfarm_backend::app::get_herd::GetHerdHandler;
 use moooodotfarm_backend::app::update::UpdateHandler;
 use moooodotfarm_backend::config::Config;
+use moooodotfarm_backend::domain::VisibleName;
 use moooodotfarm_backend::errors::Result;
 use moooodotfarm_backend::ports::http;
 use moooodotfarm_backend::ports::timers;
@@ -21,6 +23,11 @@ fn cli() -> Command {
                 .about("Runs the program")
                 .arg(arg!(<CONFIG> "Path to the configuration file")),
         )
+        .subcommand(
+            Command::new("check")
+                .about("Checks up on a cow")
+                .arg(arg!(<URL> "URL of the cow")),
+        )
 }
 
 #[tokio::main]
@@ -32,6 +39,10 @@ async fn main() -> Result<()> {
         Some(("run", sub_matches)) => {
             let config_file_path = sub_matches.try_get_one::<String>("CONFIG")?.unwrap();
             run(config_file_path).await?;
+        }
+        Some(("check", sub_matches)) => {
+            let url = sub_matches.try_get_one::<String>("URL")?.unwrap();
+            check(url).await?;
         }
         _ => unreachable!(),
     }
@@ -71,6 +82,15 @@ async fn run(config_file_path: &str) -> Result<()> {
     let http_deps = HttpDeps::new(get_herd_handler, metrics);
 
     server_loop(&server, &config, http_deps).await;
+    Ok(())
+}
+
+async fn check(url: &str) -> Result<()> {
+    let downloader = adapters::CowTxtDownloader::new();
+    let name = VisibleName::new(url)?;
+    let cow_txt = downloader.download(&name).await?;
+    println!("{}", cow_txt);
+    println!("Cow is ok!");
     Ok(())
 }
 

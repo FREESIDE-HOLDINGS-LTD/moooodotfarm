@@ -296,23 +296,31 @@ impl<'a> CowTxt<'a> {
 
         Ok(Self { content })
     }
+
     fn cow_is_present(s: &str) -> bool {
         let a: String = s.into();
-        let a = trim_trailing_whitespace_from_each_line(a.trim());
-        let b = trim_trailing_whitespace_from_each_line(COW_BODY.trim());
+        let a = Self::trim_trailing_whitespace_from_each_line(a.trim());
+        let b = Self::trim_trailing_whitespace_from_each_line(COW_BODY.trim());
         let distance = edit_distance::edit_distance(a, b);
         distance < 100
     }
+
+    fn trim_trailing_whitespace_from_each_line(s: &str) -> String {
+        s.lines()
+            .map(|line| line.trim_end())
+            .collect::<Vec<&str>>()
+            .join("\n")
+    }
+
     pub fn content(&self) -> &str {
         &self.content
     }
 }
 
-fn trim_trailing_whitespace_from_each_line(s: &str) -> String {
-    s.lines()
-        .map(|line| line.trim_end())
-        .collect::<Vec<&str>>()
-        .join("\n")
+impl<'a> Display for CowTxt<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.content)
+    }
 }
 
 #[cfg(test)]
