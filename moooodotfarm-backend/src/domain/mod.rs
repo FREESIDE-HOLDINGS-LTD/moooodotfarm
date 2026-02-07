@@ -80,6 +80,17 @@ impl Cow {
         self.last_checked = Some(now.clone());
     }
 
+    pub fn change_character(&mut self, new_character: Character) -> Result<()> {
+        if self.character == new_character {
+            return Err(Error::Unknown(anyhow!(
+                "cow already has the character: {:?}",
+                new_character
+            )));
+        }
+        self.character = new_character;
+        Ok(())
+    }
+
     pub fn name(&self) -> &VisibleName {
         &self.name
     }
