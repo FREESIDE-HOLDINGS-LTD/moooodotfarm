@@ -19,49 +19,9 @@ pub struct Database {
 impl Database {
     pub fn new(path: impl Into<String>) -> Result<Self> {
         let db = redb::Database::create(path.into()).context("Failed to open database")?;
-        let s = Self {
+        Ok(Self {
             db: Arc::new(Mutex::new(db)),
-        };
-        s.migrate()?;
-        Ok(s)
-    }
-}
-
-impl Database {
-    pub fn migrate(&self) -> Result<()> {
-        let db = self.db.lock().unwrap();
-        let write_txn = db.begin_write()?;
-
-        {
-            let mut table = write_txn.open_table(COW_STATUS_TABLE)?;
-            let mut migrated = Vec::new();
-            for row in table.iter()? {
-                let (key, value) = row?;
-                let try_old: std::result::Result<OldPersistedCow, _> =
-                    serde_json::from_str(&value.value());
-                if let Ok(old) = try_old {
-                    let new = PersistedCow {
-                        name: old.cow,
-                        character: (&Character::Shy).into(),
-                        first_seen: old.first_seen,
-                        last_seen: old.last_seen,
-                        last_checked: old.last_checked,
-                    };
-                    migrated.push((key.value().to_string(), new));
-                } else if serde_json::from_str::<PersistedCow>(&value.value()).is_ok() {
-                    continue;
-                } else {
-                    return Err(anyhow!("Failed to parse cow entry for key {}", key.value()).into());
-                }
-            }
-
-            for (key, persisted) in migrated {
-                let json = serde_json::to_string(&persisted)?;
-                table.insert(key, json)?;
-            }
-        }
-
-        Ok(write_txn.commit()?)
+        })
     }
 }
 
@@ -138,15 +98,6 @@ impl app::Inventory for Database {
         Ok(write_txn.commit()?)
     }
 }
-
-#[derive(Serialize, Deserialize)]
-pub struct OldPersistedCow {
-    cow: String,
-    first_seen: Option<String>,
-    last_seen: Option<String>,
-    last_checked: Option<String>,
-}
-
 #[derive(Serialize, Deserialize)]
 pub struct PersistedCow {
     name: String,
