@@ -145,6 +145,10 @@ pub struct CensoredName {
     url: String,
 }
 
+const CENSORSHIP_CHARACTER: char = '*';
+const PATH_SEPARATOR: char = '/';
+const DOMAIN_SEPARATOR: char = '.';
+
 impl CensoredName {
     pub fn new(cow: &Cow) -> Result<Self> {
         if cow.character == Character::Brave {
@@ -154,40 +158,62 @@ impl CensoredName {
         }
 
         let url = cow.name().url();
+        let port_with_colon = url.port().map(|p| format!(":{}", p)).unwrap_or_default();
 
-        let scheme = url.scheme();
+        let censored_url = format!(
+            "{}://{}{}{}",
+            url.scheme(),
+            Self::censor_host(url)?,
+            port_with_colon,
+            Self::censor_path(url)?,
+        );
+        Ok(Self { url: censored_url })
+    }
+
+    fn censor_host(url: &url::Url) -> Result<String> {
         let host = url
             .host_str()
             .ok_or_else(|| Error::Unknown(anyhow!("no host in url")))?;
-        let port = url.port().map(|p| format!(":{}", p)).unwrap_or_default();
-        let path = url.path();
 
         let last_dot_pos = host
-            .rfind('.')
+            .rfind(DOMAIN_SEPARATOR)
             .ok_or_else(|| Error::Unknown(anyhow!("no TLD found in host")))?;
+
         let (before_tld, tld_with_dot) = host.split_at(last_dot_pos);
 
         let censored_before: String = before_tld
             .chars()
-            .map(|c| if c == '.' { '.' } else { '*' })
+            .map(|c| {
+                if c == DOMAIN_SEPARATOR {
+                    DOMAIN_SEPARATOR
+                } else {
+                    CENSORSHIP_CHARACTER
+                }
+            })
             .collect();
-        let censored_host = format!("{}{}", censored_before, tld_with_dot);
 
-        // Censor path elements except the final /cow.txt
-        let censored_path = if path.ends_with("/cow.txt") && path.len() > 8 {
-            // There are path elements before /cow.txt
-            let before_cow = &path[..path.len() - 8]; // Remove "/cow.txt"
-            let censored_before: String = before_cow
-                .chars()
-                .map(|c| if c == '/' { '/' } else { '*' })
-                .collect();
-            format!("{}/cow.txt", censored_before)
-        } else {
-            path.to_string()
-        };
+        Ok(format!("{}{}", censored_before, tld_with_dot))
+    }
 
-        let censored_url = format!("{}://{}{}{}", scheme, censored_host, port, censored_path);
-        Ok(Self { url: censored_url })
+    fn censor_path(url: &url::Url) -> Result<String> {
+        let path = url.path();
+
+        let before_suffix = path
+            .strip_suffix(COW_SUFFIX)
+            .ok_or_else(|| Error::Unknown(anyhow!("cow doesn't have a tail?!")))?;
+
+        let censored_before_suffix: String = before_suffix
+            .chars()
+            .map(|c| {
+                if c == PATH_SEPARATOR {
+                    PATH_SEPARATOR
+                } else {
+                    CENSORSHIP_CHARACTER
+                }
+            })
+            .collect();
+
+        Ok(format!("{}{}", censored_before_suffix, COW_SUFFIX))
     }
 
     pub fn url(&self) -> &str {
@@ -428,6 +454,7 @@ mod tests {
 
         for test_case in test_cases {
             let visible_name = VisibleName::new(test_case.input.to_string()).unwrap();
+            println!("test_case.input: {}", test_case.input);
             let cow = Cow::new(visible_name, test_case.character);
             let name = Name::new(&cow).unwrap();
             let actual_url = match name {
