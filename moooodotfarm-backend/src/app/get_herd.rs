@@ -18,7 +18,7 @@ where
         Self { inventory, metrics }
     }
 
-    async fn get_herd_inner(&self) -> Result<Herd> {
+    async fn handle_inner(&self) -> Result<Herd> {
         let mut statuses = vec![];
         for cow in self.inventory.list()? {
             let censored_status = crate::domain::CensoredCow::new(&cow)?;
@@ -35,11 +35,7 @@ where
     I: Inventory + Send + Sync,
     M: Metrics + Send + Sync,
 {
-    async fn get_herd(&self) -> Result<Herd> {
-        crate::record_application_handler_call!(
-            self.metrics,
-            "get_herd",
-            self.get_herd_inner().await
-        )
+    async fn handle(&self) -> Result<Herd> {
+        crate::record_application_handler_call!(self.metrics, "get_herd", self.handle_inner().await)
     }
 }

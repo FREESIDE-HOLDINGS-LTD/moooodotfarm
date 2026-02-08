@@ -78,7 +78,7 @@ where
         let herd = self
             .deps
             .get_herd_handler()
-            .get_herd()
+            .handle()
             .await
             .map_err(|err| Status::internal(err.to_string()))?;
         let response = GetHerdResponse {
@@ -101,7 +101,7 @@ where
 
         self.deps
             .add_cow_handler()
-            .add_cow(&command)
+            .handle(&command)
             .await
             .map_err(|err| Status::internal(err.to_string()))?;
 
@@ -121,7 +121,7 @@ where
 
         self.deps
             .change_cow_character_handler()
-            .change_cow_character(&command)
+            .handle(&command)
             .await
             .map_err(|err| Status::internal(err.to_string()))?;
 

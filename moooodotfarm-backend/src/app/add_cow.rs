@@ -25,7 +25,7 @@ where
         }
     }
 
-    async fn add_cow_inner(&self, v: &app::AddCow) -> Result<()> {
+    async fn handle_inner(&self, v: &app::AddCow) -> Result<()> {
         self.downloader.download(v.name()).await?;
         self.inventory
             .update(v.name(), |status: Option<domain::Cow>| {
@@ -46,11 +46,7 @@ where
     D: CowTxtDownloader + Send + Sync,
     M: Metrics + Send + Sync,
 {
-    async fn add_cow(&self, v: &app::AddCow) -> Result<()> {
-        crate::record_application_handler_call!(
-            self.metrics,
-            "add_cow",
-            self.add_cow_inner(v).await
-        )
+    async fn handle(&self, v: &app::AddCow) -> Result<()> {
+        crate::record_application_handler_call!(self.metrics, "add_cow", self.handle_inner(v).await)
     }
 }

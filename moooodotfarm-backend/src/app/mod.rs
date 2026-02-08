@@ -16,17 +16,17 @@ pub trait UpdateHandler {
 
 #[async_trait]
 pub trait GetHerdHandler {
-    async fn get_herd(&self) -> Result<Herd>;
+    async fn handle(&self) -> Result<Herd>;
 }
 
 #[async_trait]
 pub trait AddCowHandler: Send + Sync {
-    async fn add_cow(&self, v: &AddCow) -> Result<()>;
+    async fn handle(&self, v: &AddCow) -> Result<()>;
 }
 
 #[async_trait]
 pub trait ChangeCowCharacterHandler: Send + Sync {
-    async fn change_cow_character(&self, v: &ChangeCowCharacter) -> Result<()>;
+    async fn handle(&self, v: &ChangeCowCharacter) -> Result<()>;
 }
 
 pub struct AddCow {

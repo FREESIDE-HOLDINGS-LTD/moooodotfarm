@@ -19,7 +19,7 @@ where
         Self { inventory, metrics }
     }
 
-    async fn change_cow_character_inner(&self, v: &app::ChangeCowCharacter) -> Result<()> {
+    async fn handle_inner(&self, v: &app::ChangeCowCharacter) -> Result<()> {
         self.inventory
             .update(v.name(), |cow: Option<domain::Cow>| match cow {
                 Some(mut cow) => {
@@ -38,11 +38,11 @@ where
     I: Inventory + Send + Sync,
     M: Metrics + Send + Sync,
 {
-    async fn change_cow_character(&self, v: &app::ChangeCowCharacter) -> Result<()> {
+    async fn handle(&self, v: &app::ChangeCowCharacter) -> Result<()> {
         crate::record_application_handler_call!(
             self.metrics,
             "change_cow_character",
-            self.change_cow_character_inner(v).await
+            self.handle_inner(v).await
         )
     }
 }

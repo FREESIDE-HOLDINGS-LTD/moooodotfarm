@@ -37,7 +37,7 @@ where
         }
     }
 
-    async fn handle(&self) -> Result<()> {
+    async fn handle_inner(&self) -> Result<()> {
         let mut censored_statuses = vec![];
 
         for cow in self.inventory.list()? {
@@ -84,6 +84,6 @@ where
     M: Metrics + Send + Sync,
 {
     async fn handle(&self) -> Result<()> {
-        record_application_handler_call!(self.metrics, "update", self.handle().await)
+        record_application_handler_call!(self.metrics, "update", self.handle_inner().await)
     }
 }
