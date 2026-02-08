@@ -79,6 +79,7 @@ where
             .deps
             .get_herd_handler()
             .get_herd()
+            .await
             .map_err(|err| Status::internal(err.to_string()))?;
         let response = GetHerdResponse {
             herd: Some(Herd::from(&herd)),

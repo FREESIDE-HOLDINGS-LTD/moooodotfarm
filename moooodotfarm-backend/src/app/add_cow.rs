@@ -11,13 +11,31 @@ pub struct AddCowHandler<I, D, M> {
     metrics: M,
 }
 
-impl<I, D, M> AddCowHandler<I, D, M> {
+impl<I, D, M> AddCowHandler<I, D, M>
+where
+    I: Inventory,
+    D: CowTxtDownloader,
+    M: Metrics,
+{
     pub fn new(inventory: I, downloader: D, metrics: M) -> Self {
         Self {
             inventory,
             downloader,
             metrics,
         }
+    }
+
+    async fn add_cow_inner(&self, v: &app::AddCow) -> Result<()> {
+        self.downloader.download(v.name()).await?;
+        self.inventory
+            .update(v.name(), |status: Option<domain::Cow>| {
+                if status.is_some() {
+                    return Err(Error::Unknown(anyhow!("cow already exists")));
+                }
+                let cow = domain::Cow::new(v.name().clone(), v.character().clone());
+                Ok(Some(cow))
+            })?;
+        Ok::<(), Error>(())
     }
 }
 
@@ -29,16 +47,10 @@ where
     M: Metrics + Send + Sync,
 {
     async fn add_cow(&self, v: &app::AddCow) -> Result<()> {
-        self.downloader.download(v.name()).await?;
-
-        self.inventory.update(v.name(), |status| {
-            if status.is_some() {
-                return Err(Error::Unknown(anyhow!("cow already exists")));
-            }
-
-            let cow = domain::Cow::new(v.name().clone(), v.character().clone());
-            Ok(Some(cow))
-        })?;
-        Ok::<(), Error>(())
+        crate::record_application_handler_call!(
+            self.metrics,
+            "add_cow",
+            self.add_cow_inner(v).await
+        )
     }
 }

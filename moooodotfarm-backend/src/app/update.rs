@@ -1,6 +1,20 @@
 use crate::app::{CowTxtDownloader, Inventory, Metrics};
 use crate::errors::{Error, Result};
 use crate::{app, domain};
+use async_trait::async_trait;
+
+macro_rules! record_application_handler_call {
+    ($metrics:expr, $handler_name:expr, $expr:expr) => {{
+        let start = crate::domain::time::DateTime::now();
+        let result = $expr;
+        $metrics.record_application_handler_call(
+            $handler_name,
+            (&result).into(),
+            &crate::domain::time::DateTime::now() - &start,
+        );
+        result
+    }};
+}
 
 #[derive(Clone)]
 pub struct UpdateHandler<I, D, M> {
@@ -9,7 +23,12 @@ pub struct UpdateHandler<I, D, M> {
     metrics: M,
 }
 
-impl<I, D, M> UpdateHandler<I, D, M> {
+impl<I, D, M> UpdateHandler<I, D, M>
+where
+    I: Inventory + Send + Sync,
+    D: CowTxtDownloader + Send + Sync,
+    M: Metrics + Send + Sync,
+{
     pub fn new(inventory: I, downloader: D, metrics: M) -> Self {
         Self {
             inventory,
@@ -17,14 +36,7 @@ impl<I, D, M> UpdateHandler<I, D, M> {
             metrics,
         }
     }
-}
 
-impl<I, D, M> app::UpdateHandler for UpdateHandler<I, D, M>
-where
-    I: Inventory,
-    D: CowTxtDownloader,
-    M: Metrics,
-{
     async fn handle(&self) -> Result<()> {
         let mut censored_statuses = vec![];
 
@@ -61,5 +73,17 @@ where
         self.metrics.update_herd_numbers(&herd);
 
         Ok::<(), Error>(())
+    }
+}
+
+#[async_trait]
+impl<I, D, M> app::UpdateHandler for UpdateHandler<I, D, M>
+where
+    I: Inventory + Send + Sync,
+    D: CowTxtDownloader + Send + Sync,
+    M: Metrics + Send + Sync,
+{
+    async fn handle(&self) -> Result<()> {
+        record_application_handler_call!(self.metrics, "update", self.handle().await)
     }
 }

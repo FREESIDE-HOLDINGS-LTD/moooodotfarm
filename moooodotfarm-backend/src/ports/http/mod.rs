@@ -75,7 +75,7 @@ async fn handle_get_index<D>(State(deps): State<D>) -> std::result::Result<Html<
 where
     D: Deps,
 {
-    let herd = deps.get_herd_handler().get_herd()?;
+    let herd = deps.get_herd_handler().get_herd().await?;
     let template = IndexTemplate {
         cows: herd.cows().iter().map(|v| v.into()).collect(),
     };
@@ -129,7 +129,7 @@ async fn handle_get_herd<D>(State(deps): State<D>) -> std::result::Result<Json<A
 where
     D: Deps,
 {
-    let herd = deps.get_herd_handler().get_herd()?;
+    let herd = deps.get_herd_handler().get_herd().await?;
     Ok(Json(APIHerd::from(&herd)))
 }
 

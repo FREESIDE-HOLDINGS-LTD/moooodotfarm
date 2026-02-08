@@ -37,7 +37,8 @@ impl Database {
             let mut migrated = Vec::new();
             for row in table.iter()? {
                 let (key, value) = row?;
-                let try_old: std::result::Result<OldPersistedCow, _> = serde_json::from_str(&value.value());
+                let try_old: std::result::Result<OldPersistedCow, _> =
+                    serde_json::from_str(&value.value());
                 if let Ok(old) = try_old {
                     let new = PersistedCow {
                         name: old.cow,

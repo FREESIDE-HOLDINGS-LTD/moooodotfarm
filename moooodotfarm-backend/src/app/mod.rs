@@ -9,12 +9,14 @@ use crate::domain::time::{DateTime, Duration};
 use crate::errors::{Error, Result};
 use async_trait::async_trait;
 
+#[async_trait]
 pub trait UpdateHandler {
     async fn handle(&self) -> Result<()>;
 }
 
+#[async_trait]
 pub trait GetHerdHandler {
-    fn get_herd(&self) -> Result<Herd>;
+    async fn get_herd(&self) -> Result<Herd>;
 }
 
 #[async_trait]
@@ -95,6 +97,15 @@ pub trait CowTxtDownloader: Send + Sync {
 pub enum ApplicationHandlerCallResult {
     Ok,
     Error,
+}
+
+impl<T> From<&Result<T>> for ApplicationHandlerCallResult {
+    fn from(result: &Result<T>) -> Self {
+        match result {
+            Ok(_) => ApplicationHandlerCallResult::Ok,
+            Err(_) => ApplicationHandlerCallResult::Error,
+        }
+    }
 }
 
 pub struct Herd {
@@ -184,4 +195,18 @@ impl CowStatus {
 
         CowStatus::RanAway
     }
+}
+
+#[macro_export]
+macro_rules! record_application_handler_call {
+    ($metrics:expr, $handler_name:expr, $expr:expr) => {{
+        let start = $crate::domain::time::DateTime::now();
+        let result = $expr;
+        $metrics.record_application_handler_call(
+            $handler_name,
+            (&result).into(),
+            &$crate::domain::time::DateTime::now() - &start,
+        );
+        result
+    }};
 }
