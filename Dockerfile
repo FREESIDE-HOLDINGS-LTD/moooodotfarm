@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1.6
 FROM rustlang/rust:nightly-slim AS builder
 WORKDIR /build
+RUN apt-get update && apt-get install -y protobuf-compiler
 COPY . .
 WORKDIR /build/moooodotfarm-backend
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
