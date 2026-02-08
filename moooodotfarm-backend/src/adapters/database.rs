@@ -1,5 +1,4 @@
 use crate::domain::time::DateTime;
-use crate::domain::{Character, Cow, VisibleName};
 use crate::errors::Result;
 use crate::{app, domain};
 use anyhow::{Context, anyhow};
@@ -26,7 +25,7 @@ impl Database {
 }
 
 impl app::Inventory for Database {
-    fn get(&self, name: &VisibleName) -> Result<Option<domain::Cow>> {
+    fn get(&self, name: &domain::VisibleName) -> Result<Option<domain::Cow>> {
         let db = self.db.lock().unwrap();
 
         let read_txn = db.begin_read()?;
@@ -48,7 +47,7 @@ impl app::Inventory for Database {
         }
     }
 
-    fn list(&self) -> Result<Vec<Cow>> {
+    fn list(&self) -> Result<Vec<domain::Cow>> {
         let db = self.db.lock().unwrap();
         let read_txn = db.begin_read()?;
         let mut cows = Vec::new();
@@ -68,7 +67,7 @@ impl app::Inventory for Database {
         }
     }
 
-    fn update<F>(&self, name: &VisibleName, f: F) -> Result<()>
+    fn update<F>(&self, name: &domain::VisibleName, f: F) -> Result<()>
     where
         F: FnOnce(Option<domain::Cow>) -> Result<Option<domain::Cow>>,
     {
@@ -119,22 +118,22 @@ impl From<domain::Cow> for PersistedCow {
     }
 }
 
-impl TryInto<domain::Cow> for PersistedCow {
+impl TryFrom<PersistedCow> for domain::Cow {
     type Error = crate::errors::Error;
 
-    fn try_into(self) -> std::result::Result<domain::Cow, Self::Error> {
+    fn try_from(value: PersistedCow) -> std::result::Result<Self, Self::Error> {
         Ok(domain::Cow::new_from_history(
-            self.name.try_into()?,
-            self.character.try_into()?,
-            match self.first_seen {
+            value.name.try_into()?,
+            value.character.try_into()?,
+            match value.first_seen {
                 Some(dt_str) => Some(dt_str.try_into()?),
                 None => None,
             },
-            match self.last_seen {
+            match value.last_seen {
                 Some(dt_str) => Some(dt_str.try_into()?),
                 None => None,
             },
-            match self.last_checked {
+            match value.last_checked {
                 Some(dt_str) => Some(dt_str.try_into()?),
                 None => None,
             },
@@ -142,21 +141,21 @@ impl TryInto<domain::Cow> for PersistedCow {
     }
 }
 
-impl From<&VisibleName> for String {
-    fn from(value: &VisibleName) -> Self {
+impl From<&domain::VisibleName> for String {
+    fn from(value: &domain::VisibleName) -> Self {
         value.url().to_string()
     }
 }
 
-impl TryInto<VisibleName> for String {
+impl TryFrom<String> for domain::VisibleName {
     type Error = crate::errors::Error;
 
-    fn try_into(self) -> std::result::Result<VisibleName, Self::Error> {
-        VisibleName::new(self)
+    fn try_from(value: String) -> std::result::Result<domain::VisibleName, Self::Error> {
+        domain::VisibleName::new(value)
     }
 }
 
-impl From<&Character> for String {
+impl From<&domain::Character> for String {
     fn from(value: &domain::Character) -> Self {
         match value {
             domain::Character::Brave => "brave".to_string(),
@@ -165,13 +164,13 @@ impl From<&Character> for String {
     }
 }
 
-impl TryFrom<String> for Character {
+impl TryFrom<String> for domain::Character {
     type Error = crate::errors::Error;
 
-    fn try_from(value: String) -> std::result::Result<Character, Self::Error> {
+    fn try_from(value: String) -> std::result::Result<domain::Character, Self::Error> {
         match value.as_str() {
-            "brave" => Ok(Character::Brave),
-            "shy" => Ok(Character::Shy),
+            "brave" => Ok(domain::Character::Brave),
+            "shy" => Ok(domain::Character::Shy),
             other => Err(Self::Error::Unknown(anyhow!(
                 "unknown character: {}",
                 other
@@ -187,10 +186,10 @@ impl From<&DateTime> for String {
     }
 }
 
-impl TryInto<DateTime> for String {
+impl TryFrom<String> for DateTime {
     type Error = crate::errors::Error;
 
-    fn try_into(self) -> std::result::Result<DateTime, Self::Error> {
-        DateTime::new_from_str(&self, DT_FORMAT)
+    fn try_from(value: String) -> std::result::Result<Self, Self::Error> {
+        DateTime::new_from_str(&value, DT_FORMAT)
     }
 }
