@@ -16,6 +16,9 @@ jobs:
         with:
           components: clippy, rustfmt
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+
       - name: Run CI
         working-directory: moooodotfarm-backend
         run: make ci
