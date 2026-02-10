@@ -1393,6 +1393,7 @@ dependencies = [
  "log",
  "prometheus",
  "prost",
+ "rand 0.8.5",
  "redb",
  "reqwest",
  "serde",

@@ -4,6 +4,7 @@ use crate::domain::time::{DateTime, Duration};
 use crate::errors::Error;
 use crate::errors::Result;
 use anyhow::anyhow;
+use rand::seq::SliceRandom;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
@@ -118,7 +119,7 @@ impl fmt::Display for Cow {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub struct VisibleName {
     url: url::Url,
 }
@@ -283,6 +284,40 @@ impl CensoredCow {
     }
 }
 
+impl TryFrom<&Cow> for CensoredCow {
+    type Error = Error;
+
+    fn try_from(value: &Cow) -> Result<Self> {
+        Self::new(value)
+    }
+}
+pub struct CensoredHerd {
+    cows: Vec<CensoredCow>,
+}
+
+impl CensoredHerd {
+    pub fn new(mut cows: Vec<CensoredCow>) -> Self {
+        CensoredHerd::guard_against_side_channel_attacks(&mut cows);
+        Self { cows }
+    }
+
+    fn guard_against_side_channel_attacks(cows: &mut [CensoredCow]) {
+        // we could rely on implementing Ord for VisibleName, but we want to be explicit here.
+        // this type is supposed guard against sidechannel attacks and if someone ever changes
+        // Ord for VisibleName this could lead to accidentally removing this safeguard
+        let mut rng = rand::thread_rng();
+        cows.shuffle(&mut rng);
+        cows.sort_by(|a, b| match (a.name(), b.name()) {
+            (Name::Censored(_), Name::Censored(_)) => std::cmp::Ordering::Equal,
+            (Name::Censored(_), Name::Visible(_)) => std::cmp::Ordering::Greater,
+            (Name::Visible(_), Name::Censored(_)) => std::cmp::Ordering::Less,
+            (Name::Visible(a), Name::Visible(b)) => a.cmp(b),
+        });
+    }
+    pub fn cows(&self) -> &[CensoredCow] {
+        &self.cows
+    }
+}
 pub struct CowTxt<'a> {
     content: std::borrow::Cow<'a, str>,
 }

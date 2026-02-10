@@ -1,4 +1,5 @@
 use crate::app::{CowTxtDownloader, Inventory, Metrics};
+use crate::domain::CensoredHerd;
 use crate::errors::{Error, Result};
 use crate::{app, domain};
 use async_trait::async_trait;
@@ -38,38 +39,42 @@ where
     }
 
     async fn handle_inner(&self) -> Result<()> {
-        let mut censored_statuses = vec![];
+        let mut cows: Vec<domain::Cow> = vec![];
 
-        for cow in self.inventory.list()? {
-            if !cow.should_check() {
+        for peeked_cow in self.inventory.list()? {
+            if !peeked_cow.should_check() {
                 continue;
             }
 
-            let result = self.downloader.download(cow.name()).await;
+            let result = self.downloader.download(peeked_cow.name()).await;
 
-            self.inventory.update(cow.name(), |status| {
-                if let Some(mut status) = status {
+            self.inventory.update(peeked_cow.name(), |cow| {
+                if let Some(mut cow) = cow {
                     match result {
                         Ok(_) => {
-                            status.mark_as_ok();
+                            cow.mark_as_ok();
                         }
                         Err(err) => {
                             log::warn!("cow is missing {}: {}", cow, err);
-                            status.mark_as_missing();
+                            cow.mark_as_missing();
                         }
                     }
 
-                    let censored_status = domain::CensoredCow::new(&cow)?;
-                    censored_statuses.push(censored_status);
+                    cows.push(cow.clone());
 
-                    return Ok(Some(status));
+                    return Ok(Some(cow));
                 }
 
                 Ok(None)
             })?;
         }
 
-        let herd: app::Herd = censored_statuses.try_into()?;
+        let censored_cows: Vec<domain::CensoredCow> =
+            cows.iter()
+                .map(domain::CensoredCow::new)
+                .collect::<Result<Vec<domain::CensoredCow>>>()?;
+        let censored_herd = CensoredHerd::new(censored_cows);
+        let herd: app::Herd = censored_herd.try_into()?;
         self.metrics.update_herd_numbers(&herd);
 
         Ok::<(), Error>(())

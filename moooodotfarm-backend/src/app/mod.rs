@@ -118,12 +118,16 @@ impl Herd {
     }
 }
 
-impl TryFrom<Vec<domain::CensoredCow>> for Herd {
+impl TryFrom<domain::CensoredHerd> for Herd {
     type Error = Error;
 
-    fn try_from(value: Vec<domain::CensoredCow>) -> Result<Self> {
-        let cows: Result<Vec<_>> = value.iter().map(Cow::try_from).collect();
-        Ok(Self { cows: cows? })
+    fn try_from(value: domain::CensoredHerd) -> Result<Self> {
+        let cows: Vec<Cow> = value
+            .cows()
+            .iter()
+            .map(Cow::try_from)
+            .collect::<Result<Vec<_>>>()?;
+        Ok(Self { cows })
     }
 }
 

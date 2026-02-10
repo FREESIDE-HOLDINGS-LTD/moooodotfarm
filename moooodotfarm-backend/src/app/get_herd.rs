@@ -1,6 +1,7 @@
-use crate::app;
 use crate::app::{Herd, Inventory, Metrics};
-use crate::errors::{Error, Result};
+use crate::domain::CensoredHerd;
+use crate::errors::Result;
+use crate::{app, domain};
 use async_trait::async_trait;
 
 #[derive(Clone)]
@@ -19,13 +20,12 @@ where
     }
 
     async fn handle_inner(&self) -> Result<Herd> {
-        let mut statuses = vec![];
-        for cow in self.inventory.list()? {
-            let censored_status = crate::domain::CensoredCow::new(&cow)?;
-            statuses.push(censored_status);
-        }
-        let herd: Herd = statuses.try_into()?;
-        Ok::<Herd, Error>(herd)
+        let cows = self.inventory.list()?;
+        let censored_cows = cows
+            .into_iter()
+            .map(|cow| domain::CensoredCow::new(&cow))
+            .collect::<Result<Vec<domain::CensoredCow>>>()?;
+        CensoredHerd::new(censored_cows).try_into()
     }
 }
 
