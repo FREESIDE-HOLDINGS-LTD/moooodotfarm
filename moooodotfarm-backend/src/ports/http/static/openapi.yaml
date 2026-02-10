@@ -1,0 +1,59 @@
+openapi: 3.1.0
+info:
+  title: moooo.farm API
+  version: 0.0.0
+  description: |-
+    API for monitoring the cow.txt herd. You are encouraged to provide a unique User-Agent header when calling this API from your scripts.
+servers:
+  - url: https://moooo.farm
+paths:
+  /api/herd:
+    get:
+      summary: Get the members of the herd
+      operationId: getHerd
+      responses:
+        '200':
+          description: List of cows in the herd
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cows:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Cow'
+              examples:
+                example_herd:
+                  summary: A herd of cows, some are brave and some are shy
+                  value:
+                    cows:
+                      - name: "https://moooo.farm/cow.txt"
+                        character: "brave"
+                        last_seen: "2026-02-10 23:09:43 +0000"
+                      - name: "https://example.com/cow.txt"
+                        character: "brave"
+                        last_seen: null
+                      - name: "https://*******.com/cow.txt"
+                        character: "shy"
+                        last_seen: "2026-02-09 23:09:43 +0000"
+components:
+  schemas:
+    Cow:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The cow's name. If the cow is brave then the name is likely a valid URL. If the cow is shy then the name is likely a URL with some characters replaced by asterisks.
+          example: "https://*******.com/cow.txt"
+        character:
+          type: string
+          enum: [brave, shy]
+          description: The cow's character.
+          example: shy
+        last_seen:
+          type: string
+          format: date-time
+          nullable: true
+          description: The last time the cow was seen, or null if never seen.
+          example: "2026-02-10 22:12:05 +0000"

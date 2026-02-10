@@ -56,6 +56,7 @@ where
             .route("/new", get(handle_get_new))
             .route("/cves", get(handle_get_cves))
             .route("/metrics", get(handle_get_metrics::<D>))
+            .route("/api", get(handle_get_redoc))
             .route("/api/herd", get(handle_get_herd::<D>))
             .fallback(handle_static)
             .layer(
@@ -117,6 +118,8 @@ fn get_mime_type(path: &str) -> std::result::Result<&'static str, ()> {
         Ok("image/x-icon")
     } else if path.ends_with(".txt") {
         Ok("text/plain; charset=utf-8")
+    } else if path.ends_with(".yaml") {
+        Ok("text/yaml")
     } else {
         Err(())
     }
@@ -137,6 +140,11 @@ where
 {
     let herd = deps.get_herd_handler().handle().await?;
     Ok(Json(APIHerd::from(&herd)))
+}
+
+async fn handle_get_redoc() -> std::result::Result<Html<String>, AppError> {
+    let t = RedocTemplate {};
+    Ok(Html(t.render()?))
 }
 
 #[derive(Serialize)]
@@ -196,6 +204,10 @@ struct NewTemplate {}
 #[derive(Template)]
 #[template(path = "cves.html")]
 struct CvesTemplate {}
+
+#[derive(Template)]
+#[template(path = "redoc.html")]
+struct RedocTemplate {}
 
 struct TemplateCowName {
     name: String,
