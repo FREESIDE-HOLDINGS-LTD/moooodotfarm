@@ -54,6 +54,7 @@ where
             .route("/", get(handle_get_index::<D>))
             .route("/rfc", get(handle_get_rfc))
             .route("/new", get(handle_get_new))
+            .route("/cves", get(handle_get_cves))
             .route("/metrics", get(handle_get_metrics::<D>))
             .route("/api/herd", get(handle_get_herd::<D>))
             .fallback(handle_static)
@@ -89,6 +90,11 @@ async fn handle_get_rfc() -> std::result::Result<Html<String>, AppError> {
 
 async fn handle_get_new() -> std::result::Result<Html<String>, AppError> {
     let template = NewTemplate {};
+    Ok(Html(template.render()?))
+}
+
+async fn handle_get_cves() -> std::result::Result<Html<String>, AppError> {
+    let template = CvesTemplate {};
     Ok(Html(template.render()?))
 }
 
@@ -186,6 +192,10 @@ struct RfcTemplate {}
 #[derive(Template)]
 #[template(path = "new.html")]
 struct NewTemplate {}
+
+#[derive(Template)]
+#[template(path = "cves.html")]
+struct CvesTemplate {}
 
 struct TemplateCowName {
     name: String,

@@ -3,12 +3,6 @@
 {% block title %}Request For Cows{% endblock %}
 
 {% block extra_styles %}
-        .page {
-            max-width: 880px;
-            margin: 0 auto;
-            padding: 2.5rem 1.5rem 4rem;
-        }
-
         .rfc-top {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -62,33 +56,9 @@
             font-weight: 700;
         }
 
-        p {
-            margin: 0.8rem 0;
-            line-height: 1.6;
-        }
-
-        a {
-            color: var(--grass);
-            text-decoration: underline;
-        }
-
-        a:hover {
-            color: var(--grass-dark);
-        }
-
         ol, ul {
             margin: 0.8rem 0 0.8rem 1.8rem;
             line-height: 1.6;
-        }
-
-        .rfc-abstract {
-            border: 3px solid var(--grass);
-            background: white;
-            border-radius: 16px;
-            padding: 1.5rem 1.8rem;
-            margin: 1.6rem 0;
-            box-shadow: 0 4px 12px rgba(93, 64, 55, 0.08);
-            z-index: 0;
         }
 
         .rfc-abstract-title {
@@ -113,7 +83,7 @@
 {% endblock %}
 
 {% block content %}
-    <div class="page">
+    <main class="content">
         <div class="back-link-container">
             <a href="/" class="back-link">← go back to admiring all cows</a>
         </div>
@@ -303,5 +273,5 @@ $ sha512sum cow.txt
         <div class="footer">
             This document is a mandatory Internet standard and may be updated without notice.
         </div>
-    </div>
+    </main>
 {% endblock %}

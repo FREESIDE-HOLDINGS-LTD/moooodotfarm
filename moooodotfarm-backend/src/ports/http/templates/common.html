@@ -1,0 +1,12 @@
+{% macro common_header(title, subtitle_text) %}
+<header class="subpage-header">
+    <div class="back-link-container">
+        <a href="/" class="back-link">← go back to admiring all cows</a>
+    </div>
+    <div class="cow">
+        <img src="/cow.png" alt="a very round cow">
+    </div>
+    <h1>{{ title }}</h1>
+    <div class="subtitle">{{ subtitle_text }}</div>
+</header>
+{% endmacro %}

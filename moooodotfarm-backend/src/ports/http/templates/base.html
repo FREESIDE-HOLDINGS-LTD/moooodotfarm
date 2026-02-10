@@ -56,6 +56,30 @@
             pointer-events: none;
         }
 
+        pre {
+            background: rgba(93, 64, 55, 0.05);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--grass-light);
+            z-index: 0;
+            text-transform: none;
+        }
+
+        pre code {
+            background: transparent;
+            padding: 0;
+        }
+
+        code {
+            background: rgba(161, 136, 127, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.95em;
+            color: var(--grass-dark);
+        }
+
         .back-link-container {
             text-align: center;
             margin-bottom: 1.5rem;
@@ -81,27 +105,63 @@
             color: white;
         }
 
-        pre {
-            background: rgba(93, 64, 55, 0.05);
-            padding: 1rem;
-            border-radius: 8px;
-            overflow-x: auto;
-            border: 1px solid var(--grass-light);
+        .subpage-header {
+            .cow {
+                text-align: center;
+                margin: 1rem 0;
+            }
+
+            .cow img {
+                width: 120px;
+                height: auto;
+                image-rendering: pixelated;
+            }
+
+            h1 {
+                text-align: center;
+                font-size: 2rem;
+                font-weight: 700;
+                color: var(--text);
+                margin-bottom: 0.8rem;
+            }
+
+            .subtitle {
+                text-align: center;
+                font-size: 1.2rem;
+                color: var(--warm-brown);
+                margin-bottom: 1.8rem;
+                font-weight: 700;
+            }
+        }
+
+        .content {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+            position: relative;
+        }
+
+        section {
+            border: 3px solid var(--grass);
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem 1.8rem;
+            margin: 1.6rem 0;
+            box-shadow: 0 4px 12px rgba(93, 64, 55, 0.08);
             z-index: 0;
-            text-transform: none;
         }
 
-        pre code {
-            background: transparent;
-            padding: 0;
+        p {
+            margin: 0.8rem 0;
+            line-height: 1.6;
         }
 
-        code {
-            background: rgba(161, 136, 127, 0.1);
-            padding: 0.2rem 0.4rem;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 0.95em;
+        a {
+            color: var(--grass);
+            text-decoration: underline;
+        }
+
+        a:hover {
             color: var(--grass-dark);
         }
 

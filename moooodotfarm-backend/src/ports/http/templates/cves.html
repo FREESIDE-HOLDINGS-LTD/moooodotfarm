@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% import "common.html" as common %}
+
+{% block title %}Cow Vulnerabilities and Exposures (CVEs){% endblock %}
+
+{% block extra_styles %}
+    .cve-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 1.2em;
+        margin-bottom: 0.7em;
+    }
+    .cve-id {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: var(--grass-dark);
+        letter-spacing: 0.04em;
+    }
+    .cve-date {
+        color: #888;
+        font-size: 0.98em;
+    }
+    .cve-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0.5rem 0 1rem 0;
+        color: var(--warm-brown);
+    }
+    .cve-section {
+        margin: 1.2em 0 0.7em 0;
+    }
+    .cve-section-title {
+        font-weight: 600;
+        color: var(--grass-dark);
+        margin-bottom: 0.2em;
+        font-size: 1.08em;
+    }
+
+    .cve-severity, .cve-status {
+        font-weight: bold;
+        border-radius: 6px;
+        padding: 0.2em 0.5em;
+        margin-left: .2em;
+    }
+
+    .cve-severity {
+        color: #b71c1c;
+        background: #ffeaea;
+    }
+
+    .cve-status {
+        color: var(--grass-dark);
+        background: var(--grass-light);
+    }
+{% endblock %}
+
+{% block content %}
+    <main class="content">
+        {{ common::common_header("Cow Vulnerabilities and Exposures (CVEs)", "Security incidents affecting the herd") }}
+
+        <section>
+            <div class="cve-header">
+                <span class="cve-id">CVE-2026-1</span>
+                <span class="cve-date">2026-02-10</span>
+                <span class="cve-severity">Severity: HIGH</span>
+                <span class="cve-status">Status: PATCHED</span>
+            </div>
+            <div class="cve-title">Side Channel Attack on Shy Cows' Censored Names</div>
+            <div class="cve-section">
+                <div class="cve-section-title">Description</div>
+                <p>
+                    A side channel vulnerability in the handling of shy cows' names allowed an attacker to deduce the shy cow's name by submitting crafted names and analyzing the position of the shy cow in the herd. By observing how the position of a newly submitted cow related to other cows in the herd, the attacker could perform a binary search to reveal censored names of shy cows. This could violate the privacy expectations of shy cows in the herd.
+                </p>
+            </div>
+            <div class="cve-section">
+                <div class="cve-section-title">Severity & Impact</div>
+                <p>
+                    Successful exploitation could result in the exposure of shy cows' names that were intended to remain private. No data corruption or denial of service is possible via this vector, but the privacy of the herd is at risk.
+                </p>
+            </div>
+            <div class="cve-section">
+                <div class="cve-section-title">Affected Versions</div>
+                <p>
+                    All versions before the fix commit and after the cow characters were introduced.
+                </p>
+            </div>
+            <div class="cve-section">
+                <div class="cve-section-title">Patched Version</div>
+                <p>
+                    Patched in commit <a href="https://github.com/FREESIDE-HOLDINGS-LTD/moooodotfarm/commit/c23046b80b14eca192e1574b7a97fd2934208e2b"><code>c23046b80b14eca192e1574b7a97fd2934208e2b</code></a>.
+                </p>
+            </div>
+            <div class="cve-section">
+                <div class="cve-section-title">Mitigation</div>
+                <p>
+                    The patch ensures that the sorting logic no longer leaks information about the shy cows' names via the cows' position in the list, making such side channel attacks infeasible. No action is required for existing cows or new cows.
+                </p>
+            </div>
+            <div class="cve-section">
+                <div class="cve-section-title">Exploitation Status</div>
+                <p>
+                    As of the date of this advisory, there is no evidence that this vulnerability was ever exploited in the wild or at the farm. The issue was discovered internally during a routine code review and has only theoretical impact. No user-reported incidents or suspicious activity related to this vulnerability have been observed.
+                </p>
+            </div>
+        </section>
+    </main>
+{% endblock %}

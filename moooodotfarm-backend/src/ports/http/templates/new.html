@@ -1,105 +1,44 @@
 {% extends "base.html" %}
 
+{% import "common.html" as common %}
+
 {% block title %}report a new cow{% endblock %}
 
 {% block extra_styles %}
-        .page {
-            max-width: 760px;
-            margin: 0 auto;
-            padding: 2.5rem 1.5rem 4rem;
-        }
-
-        .card {
-            background: white;
-            border-radius: 18px;
-            border: 2px solid var(--grass-light);
-            padding: 2rem 2.2rem;
-            box-shadow: 0 4px 12px rgba(93, 64, 55, 0.08);
-        }
-
-        h1 {
-            text-align: center;
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text);
-            margin-bottom: 0.8rem;
-        }
-
-        .subtitle {
-            text-align: center;
-            font-size: 1.2rem;
-            color: var(--warm-brown);
-            margin-bottom: 1.8rem;
-            font-weight: 700;
-        }
-
-        p {
-            margin: 0.8rem 0;
-            line-height: 1.6;
-        }
-
-        a {
-            color: var(--grass);
-            text-decoration: underline;
-        }
-
-        a:hover {
-            color: var(--grass-dark);
-        }
-
-        .keyword {
-            color: var(--grass-dark);
-            font-weight: 700;
-            letter-spacing: 0.03em;
-        }
-
-        .assurance {
-            margin-top: 1.5rem;
-            padding: 1rem 1.2rem;
-            border-radius: 12px;
-            border: 2px dashed var(--grass-light);
-            background: rgba(174, 213, 129, 0.12);
-            color: var(--text);
-        }
-
-        .cow {
-            text-align: center;
-            margin: 1rem 0;
-        }
-
-        .cow img {
-            width: 120px;
-            height: auto;
-            image-rendering: pixelated;
-        }
+    .keyword {
+        color: var(--grass-dark);
+        font-weight: 700;
+        letter-spacing: 0.03em;
+    }
 {% endblock %}
 
 {% block content %}
-    <main class="page">
-        <div class="back-link-container">
-            <a href="/" class="back-link">← go back to admiring all cows</a>
-        </div>
-        <div class="cow">
-            <img src="/cow.png" alt="a very round cow">
-        </div>
-        <h1>bring a new cow to the herd</h1>
-        <div class="subtitle">how to get your cow.txt listed</div>
+    <main class="content">
+        {{ common::common_header("bring a new cow to the herd", "how to get your cow.txt listed") }}
+
         <p>
             If you want your cow added to the herd, email the URL of your <code>cow.txt</code> to
             <a href="mailto:boreq@0x46.net">boreq@0x46.net</a>.
         </p>
+
         <p>
             As some cows can be shy and other cows can be brave please clearly state whether the cow URL should be
             <span class="keyword">VISIBLE</span> or <span class="keyword">CENSORED</span>,
             and make sure the URL you send is <span class="keyword">NOT</span> censored.
         </p>
-        <p>
-            Cows can change their minds at any time, so feel free to email whenever you want to switch whether the cow’s name is visible or censored.
-        </p>
-        <div class="assurance">
+
+        <section>
             The website needs the uncensored URL to verify that <code>cow.txt</code> is present, but if you
             request the URL to be censored, the uncensored URL will never be made publicly accessible via any
             means.
-        </div>
+        </section>
+
+        <p>
+            Cows can change their minds at any time, so feel free to email whenever you want to switch whether the cow’s name is visible or censored.
+        </p>
+
+        <section>
+            We are tracking all security incidents as <a href="/cves">Cow Vulnerabilities and Exposures (CVEs)</a>.
+        </section>
     </main>
 {% endblock %}
