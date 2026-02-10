@@ -4,14 +4,6 @@
 
 {% block title %}report a new cow{% endblock %}
 
-{% block extra_styles %}
-    .keyword {
-        color: var(--grass-dark);
-        font-weight: 700;
-        letter-spacing: 0.03em;
-    }
-{% endblock %}
-
 {% block content %}
     <main class="content">
         {{ common::common_header("bring a new cow to the herd", "how to get your cow.txt listed") }}
@@ -23,8 +15,8 @@
 
         <p>
             As some cows can be shy and other cows can be brave please clearly state whether the cow URL should be
-            <span class="keyword">VISIBLE</span> or <span class="keyword">CENSORED</span>,
-            and make sure the URL you send is <span class="keyword">NOT</span> censored.
+            <strong>VISIBLE</strong> or <strong>CENSORED</strong>,
+            and make sure the URL you send is <strong>NOT</strong> censored.
         </p>
 
         <section>
