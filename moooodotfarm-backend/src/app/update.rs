@@ -43,6 +43,7 @@ where
 
         for peeked_cow in self.inventory.list()? {
             if !peeked_cow.should_check() {
+                cows.push(peeked_cow.clone());
                 continue;
             }
 
