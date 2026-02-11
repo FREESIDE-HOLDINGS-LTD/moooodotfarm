@@ -4,7 +4,7 @@ Moooooonitoring the cow.txt herd.
 
 ## API
 
-Please see [https://mooo.farm/api](https://mooo.farm/api) for the list of all endpoints.
+Please see [https://moooo.farm/api](https://moooo.farm/api) for the list of all endpoints.
 
 ## Local development
 
