@@ -3,8 +3,9 @@ use crate::config::Environment;
 use crate::errors::{Error, Result};
 use crate::{app, config};
 use askama::Template;
+use axum::extract::Request;
 use axum::response::Html;
-use axum::{Router, routing::get};
+use axum::{Router, ServiceExt, routing::get};
 use axum::{
     extract::Json,
     extract::State,
@@ -16,8 +17,9 @@ use include_dir::{Dir, include_dir};
 use prometheus::TextEncoder;
 use serde::Serialize;
 use std::fmt::Display;
-use tower::ServiceBuilder;
+use tower::{Layer, ServiceBuilder};
 use tower_http::compression::CompressionLayer;
+use tower_http::normalize_path::NormalizePathLayer;
 use tower_http::{
     cors::{Any, CorsLayer},
     trace::TraceLayer,
@@ -50,7 +52,7 @@ where
 
         let compression = CompressionLayer::new();
 
-        let app = Router::new()
+        let router = Router::new()
             .route("/", get(handle_get_index::<D>))
             .route("/rfc", get(handle_get_rfc))
             .route("/new", get(handle_get_new))
@@ -67,8 +69,12 @@ where
             )
             .with_state(self.deps.clone());
 
+        let normalize_path = NormalizePathLayer::trim_trailing_slash();
+        let app = normalize_path.layer(router);
+        let service = ServiceExt::<Request>::into_make_service(app);
+
         let listener = tokio::net::TcpListener::bind(self.config.http_address()).await?;
-        axum::serve(listener, app).await?;
+        axum::serve(listener, service).await?;
         Ok(())
     }
 }

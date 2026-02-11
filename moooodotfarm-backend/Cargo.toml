@@ -34,5 +34,6 @@ tonic = "0.12.3"
 prost = "0.13.5"
 async-trait = "0.1"
 rand = "0.8"
+
 [build-dependencies]
 tonic-build = "0.12.3"
