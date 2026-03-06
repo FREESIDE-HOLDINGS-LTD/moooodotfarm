@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}moooo.farm{% endblock %}</title>
+    <meta property="og:title" content="{% block og_title %}moooo.farm{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}moooooonitoring the cow.txt herd{% endblock %}">
+    <meta property="og:image" content="https://moooo.farm/{% block og_image %}og-image.png{% endblock %}">
+    <meta property="og:url" content="https://moooo.farm{% block og_url %}/{% endblock %}">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
