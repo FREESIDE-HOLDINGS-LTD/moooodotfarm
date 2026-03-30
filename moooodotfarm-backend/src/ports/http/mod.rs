@@ -1,5 +1,6 @@
 use crate::app::GetHerdHandler;
 use crate::config::Environment;
+use crate::domain::time::DateTime;
 use crate::errors::{Error, Result};
 use crate::{app, config};
 use askama::Template;
@@ -245,29 +246,41 @@ struct TemplateCow {
     name_with_kind: TemplateCowName,
     last_seen: String,
     status: CowStatus,
+    is_new: bool,
+}
+
+lazy_static::lazy_static! {
+    static ref RECENTLY_SEEN_THRESHOLD: crate::domain::time::Duration =
+        crate::domain::time::Duration::new_from_hours(2);
+
+    static ref NEW_COW_THRESHOLD: crate::domain::time::Duration =
+        crate::domain::time::Duration::new_from_days(14);
 }
 
 impl From<&app::Cow> for TemplateCow {
     fn from(value: &app::Cow) -> Self {
-        use crate::domain::time::{DateTime, Duration};
-
         let last_seen_str = value
             .last_seen()
             .map(|v| {
                 let now = DateTime::now();
                 let duration = &now - v;
-                if duration < Duration::new_from_hours(2) {
+                if duration < *RECENTLY_SEEN_THRESHOLD {
                     "very recently".to_string()
                 } else {
                     v.ago()
                 }
             })
             .unwrap_or_else(|| "never".to_string());
+        let is_new = value
+            .first_seen()
+            .map(|v| DateTime::now() - v < *NEW_COW_THRESHOLD)
+            .unwrap_or(false);
 
         Self {
             name_with_kind: value.name().into(),
             last_seen: last_seen_str,
             status: value.status().into(),
+            is_new,
         }
     }
 }

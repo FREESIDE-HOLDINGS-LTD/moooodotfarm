@@ -1390,6 +1390,7 @@ dependencies = [
  "env_logger",
  "http",
  "include_dir",
+ "lazy_static",
  "log",
  "prometheus",
  "prost",
