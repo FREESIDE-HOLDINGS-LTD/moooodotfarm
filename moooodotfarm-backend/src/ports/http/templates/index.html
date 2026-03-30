@@ -235,6 +235,9 @@
                         {% endmatch %}
                         <div class="cow-meta">last seen: {{ cow.last_seen }}</div>
                     </div>
+                    {% if cow.is_new %}
+                        <div class="new-indicator">new!</div>
+                    {% endif %}
                     <div class="status-indicator {{ cow.status }}"></div>
                 </li>
             {% else %}

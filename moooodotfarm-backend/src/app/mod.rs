@@ -134,6 +134,7 @@ impl TryFrom<domain::CensoredHerd> for Herd {
 pub struct Cow {
     name: domain::Name,
     character: Character,
+    first_seen: Option<DateTime>,
     last_seen: Option<DateTime>,
     status: CowStatus,
 }
@@ -145,6 +146,10 @@ impl Cow {
 
     pub fn character(&self) -> &Character {
         &self.character
+    }
+
+    pub fn first_seen(&self) -> Option<&DateTime> {
+        self.first_seen.as_ref()
     }
 
     pub fn last_seen(&self) -> Option<&DateTime> {
@@ -163,6 +168,7 @@ impl TryFrom<&domain::CensoredCow> for Cow {
         Ok(Self {
             name: value.name().clone(),
             character: value.character().clone(),
+            first_seen: value.first_seen().cloned(),
             last_seen: value.last_seen().cloned(),
             status: CowStatus::new(value),
         })
