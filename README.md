@@ -24,3 +24,7 @@ Please see [https://moooo.farm/api](https://moooo.farm/api) for the list of all 
 5. The same checks (tests, linter) that are executed to validate your pull request can be locally run with:
 
        $ make ci
+
+6. If you want to check if a CLI gRPC endpoint works execute something along the lines of:
+
+       $ MOOOODOTFARM_GRPC_ADDRESS=127.0.0.1:9090 cargo run --bin moooodotfarm -- add_cow https://example.com/cow.txt brave
