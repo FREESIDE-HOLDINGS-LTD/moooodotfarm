@@ -170,6 +170,13 @@
             system incompatibilities, or security policies that prevent root-level file serving.
             In all cases where <code>/cow.txt</code> is possible, it <strong>MUST</strong> be used.
         </p>
+        <p>
+            The <code>cow.txt</code> resource <strong>SHOULD</strong> be served
+            from a fully qualified domain name as close to the top-level domain
+            as possible within the domain name hierarchy. For example
+            <code>example.com/cow.txt</code> <strong>SHOULD</strong> be
+            preferred over <code>subdomain.example.com/cow.txt</code>.
+        </p>
 
         <h3>3.2 Example</h3>
         <pre><code>GET /cow.txt HTTP/1.1
