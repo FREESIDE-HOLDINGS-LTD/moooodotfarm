@@ -267,7 +267,12 @@ type ChangeCowCharacterHandlerImpl =
 type DeleteCowHandlerImpl = DeleteCowHandler<database::Database, adapters::Metrics>;
 type HttpDepsImpl = HttpDeps<GetHerdHandlerImpl>;
 type HttpServerImpl<'a> = http::Server<'a, HttpDepsImpl>;
-type GrpcDepsImpl = GrpcDeps<GetHerdHandlerImpl, AddCowHandlerImpl, ChangeCowCharacterHandlerImpl, DeleteCowHandlerImpl>;
+type GrpcDepsImpl = GrpcDeps<
+    GetHerdHandlerImpl,
+    AddCowHandlerImpl,
+    ChangeCowCharacterHandlerImpl,
+    DeleteCowHandlerImpl,
+>;
 type GrpcServerImpl<'a> = grpc::GrpcServer<'a, GrpcDepsImpl>;
 type UpdateTimerImpl = timers::UpdateTimer<UpdateHandlerImpl>;
 
@@ -291,8 +296,7 @@ impl<'a> Service<'a> {
             AddCowHandler::new(database.clone(), downloader.clone(), metrics.clone());
         let change_cow_character_handler =
             ChangeCowCharacterHandler::new(database.clone(), metrics.clone());
-        let delete_cow_handler =
-            DeleteCowHandler::new(database.clone(), metrics.clone());
+        let delete_cow_handler = DeleteCowHandler::new(database.clone(), metrics.clone());
 
         let timer = timers::UpdateTimer::new(update_handler.clone());
         let http_deps = HttpDeps::new(get_herd_handler.clone(), metrics);

@@ -1,6 +1,6 @@
+use crate::app;
 use crate::app::{Inventory, Metrics};
 use crate::errors::Result;
-use crate::app;
 use async_trait::async_trait;
 
 #[derive(Clone)]
@@ -38,4 +38,3 @@ where
         )
     }
 }
-
