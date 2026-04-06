@@ -96,6 +96,24 @@ impl app::Inventory for Database {
         }
         Ok(write_txn.commit()?)
     }
+
+    fn delete(&self, name: &domain::VisibleName) -> Result<()> {
+        let db = self.db.lock().unwrap();
+
+        let write_txn = db.begin_write()?;
+        {
+            let mut table = write_txn.open_table(COW_STATUS_TABLE)?;
+            let key = name.url().to_string();
+
+            match table.remove(&key)? {
+                Some(_) => {}
+                None => {
+                    return Err(anyhow!("cow does not exist").into());
+                }
+            }
+        }
+        Ok(write_txn.commit()?)
+    }
 }
 #[derive(Serialize, Deserialize)]
 pub struct PersistedCow {

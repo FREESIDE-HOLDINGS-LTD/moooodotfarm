@@ -1,4 +1,4 @@
-use crate::app::{AddCowHandler, ChangeCowCharacterHandler, GetHerdHandler};
+use crate::app::{AddCowHandler, ChangeCowCharacterHandler, DeleteCowHandler, GetHerdHandler};
 use crate::config;
 use crate::errors::{Error, Result};
 use crate::{app, domain};
@@ -14,7 +14,7 @@ use crate::domain::Character;
 use generated::moooodotfarm_service_server::{MoooodotfarmService, MoooodotfarmServiceServer};
 use generated::{
     AddCowRequest, AddCowResponse, ChangeCowCharacterRequest, ChangeCowCharacterResponse, Cow,
-    GetHerdRequest, GetHerdResponse, Herd,
+    DeleteCowRequest, DeleteCowResponse, GetHerdRequest, GetHerdResponse, Herd,
 };
 
 const DT_FORMAT: &str = "%Y-%m-%d %H:%M:%S %z";
@@ -23,6 +23,7 @@ pub trait Deps {
     fn get_herd_handler(&self) -> &impl GetHerdHandler;
     fn add_cow_handler(&self) -> &impl AddCowHandler;
     fn change_cow_character_handler(&self) -> &impl ChangeCowCharacterHandler;
+    fn delete_cow_handler(&self) -> &impl DeleteCowHandler;
 }
 
 pub struct GrpcServer<'a, D> {
@@ -126,6 +127,24 @@ where
             .map_err(|err| Status::internal(err.to_string()))?;
 
         Ok(Response::new(ChangeCowCharacterResponse {}))
+    }
+
+    async fn delete_cow(
+        &self,
+        request: Request<DeleteCowRequest>,
+    ) -> std::result::Result<Response<DeleteCowResponse>, Status> {
+        let payload = request.into_inner();
+        let name = domain::VisibleName::new(payload.name)
+            .map_err(|err| Status::invalid_argument(err.to_string()))?;
+        let command = app::DeleteCow::new(name);
+
+        self.deps
+            .delete_cow_handler()
+            .handle(&command)
+            .await
+            .map_err(|err| Status::internal(err.to_string()))?;
+
+        Ok(Response::new(DeleteCowResponse {}))
     }
 }
 

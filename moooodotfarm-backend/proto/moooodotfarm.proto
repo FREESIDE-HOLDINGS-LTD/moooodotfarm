@@ -6,6 +6,7 @@ service MoooodotfarmService {
   rpc GetHerd (GetHerdRequest) returns (GetHerdResponse);
   rpc AddCow (AddCowRequest) returns (AddCowResponse);
   rpc ChangeCowCharacter (ChangeCowCharacterRequest) returns (ChangeCowCharacterResponse);
+  rpc DeleteCow (DeleteCowRequest) returns (DeleteCowResponse);
 }
 
 message GetHerdRequest {}
@@ -38,3 +39,10 @@ message ChangeCowCharacterRequest {
 }
 
 message ChangeCowCharacterResponse {}
+
+message DeleteCowRequest {
+  string name = 1;
+}
+
+message DeleteCowResponse {}
+

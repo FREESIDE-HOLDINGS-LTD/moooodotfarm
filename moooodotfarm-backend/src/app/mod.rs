@@ -1,5 +1,6 @@
 pub mod add_cow;
 pub mod change_cow_character;
+pub mod delete_cow;
 pub mod get_herd;
 pub mod update;
 
@@ -27,6 +28,11 @@ pub trait AddCowHandler: Send + Sync {
 #[async_trait]
 pub trait ChangeCowCharacterHandler: Send + Sync {
     async fn handle(&self, v: &ChangeCowCharacter) -> Result<()>;
+}
+
+#[async_trait]
+pub trait DeleteCowHandler: Send + Sync {
+    async fn handle(&self, v: &DeleteCow) -> Result<()>;
 }
 
 pub struct AddCow {
@@ -70,6 +76,20 @@ impl ChangeCowCharacter {
     }
 }
 
+pub struct DeleteCow {
+    name: domain::VisibleName,
+}
+
+impl DeleteCow {
+    pub fn new(name: domain::VisibleName) -> Self {
+        Self { name }
+    }
+
+    pub fn name(&self) -> &domain::VisibleName {
+        &self.name
+    }
+}
+
 pub trait Metrics {
     fn record_application_handler_call(
         &self,
@@ -87,6 +107,7 @@ pub trait Inventory {
     fn update<F>(&self, name: &domain::VisibleName, f: F) -> Result<()>
     where
         F: FnOnce(Option<domain::Cow>) -> Result<Option<domain::Cow>>;
+    fn delete(&self, name: &domain::VisibleName) -> Result<()>;
 }
 
 #[async_trait]

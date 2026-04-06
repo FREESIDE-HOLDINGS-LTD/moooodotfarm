@@ -4,13 +4,14 @@ use log::error;
 use moooodotfarm_backend::adapters::{ConfigLoader, database};
 use moooodotfarm_backend::app::add_cow::AddCowHandler;
 use moooodotfarm_backend::app::change_cow_character::ChangeCowCharacterHandler;
+use moooodotfarm_backend::app::delete_cow::DeleteCowHandler;
 use moooodotfarm_backend::app::get_herd::GetHerdHandler;
 use moooodotfarm_backend::app::update::UpdateHandler;
 use moooodotfarm_backend::config::Config;
 use moooodotfarm_backend::errors::Result;
 use moooodotfarm_backend::ports::grpc::generated::moooodotfarm_service_client::MoooodotfarmServiceClient;
 use moooodotfarm_backend::ports::grpc::generated::{
-    AddCowRequest, ChangeCowCharacterRequest, GetHerdRequest,
+    AddCowRequest, ChangeCowCharacterRequest, DeleteCowRequest, GetHerdRequest,
 };
 use moooodotfarm_backend::ports::timers;
 use moooodotfarm_backend::ports::{grpc, http};
@@ -40,6 +41,11 @@ fn cli() -> Command {
                 .arg(arg!(<NAME> "Name/URL of the cow"))
                 .arg(arg!(<CHARACTER> "New character of the cow (brave/shy)")),
         )
+        .subcommand(
+            Command::new("delete_cow")
+                .about("Deletes a cow over gRPC")
+                .arg(arg!(<NAME> "Name/URL of the cow")),
+        )
 }
 
 #[tokio::main]
@@ -64,6 +70,10 @@ async fn main() -> Result<()> {
             let name = sub_matches.try_get_one::<String>("NAME")?.unwrap();
             let character = sub_matches.try_get_one::<String>("CHARACTER")?.unwrap();
             change_cow_character(name, character).await?;
+        }
+        Some(("delete_cow", sub_matches)) => {
+            let name = sub_matches.try_get_one::<String>("NAME")?.unwrap();
+            delete_cow(name).await?;
         }
         _ => unreachable!(),
     }
@@ -117,6 +127,17 @@ async fn change_cow_character(name: &str, character: &str) -> Result<()> {
         })
         .await?;
     println!("Cow character changed successfully!");
+    Ok(())
+}
+
+async fn delete_cow(name: &str) -> Result<()> {
+    let mut client = get_client().await?;
+    client
+        .delete_cow(DeleteCowRequest {
+            name: name.to_string(),
+        })
+        .await?;
+    println!("Cow deleted successfully!");
     Ok(())
 }
 
@@ -189,31 +210,35 @@ where
 }
 
 #[derive(Clone)]
-struct GrpcDeps<GHH, ACH, CCH> {
+struct GrpcDeps<GHH, ACH, CCH, DCH> {
     get_herd_handler: GHH,
     add_cow_handler: ACH,
     change_cow_character_handler: CCH,
+    delete_cow_handler: DCH,
 }
 
-impl<GHH, ACH, CCH> GrpcDeps<GHH, ACH, CCH> {
+impl<GHH, ACH, CCH, DCH> GrpcDeps<GHH, ACH, CCH, DCH> {
     pub fn new(
         get_herd_handler: GHH,
         add_cow_handler: ACH,
         change_cow_character_handler: CCH,
+        delete_cow_handler: DCH,
     ) -> Self {
         Self {
             get_herd_handler,
             add_cow_handler,
             change_cow_character_handler,
+            delete_cow_handler,
         }
     }
 }
 
-impl<GHH, ACH, CCH> grpc::Deps for GrpcDeps<GHH, ACH, CCH>
+impl<GHH, ACH, CCH, DCH> grpc::Deps for GrpcDeps<GHH, ACH, CCH, DCH>
 where
     GHH: app::GetHerdHandler,
     ACH: app::AddCowHandler,
     CCH: app::ChangeCowCharacterHandler,
+    DCH: app::DeleteCowHandler,
 {
     fn get_herd_handler(&self) -> &impl app::GetHerdHandler {
         &self.get_herd_handler
@@ -226,6 +251,10 @@ where
     fn change_cow_character_handler(&self) -> &impl app::ChangeCowCharacterHandler {
         &self.change_cow_character_handler
     }
+
+    fn delete_cow_handler(&self) -> &impl app::DeleteCowHandler {
+        &self.delete_cow_handler
+    }
 }
 
 type GetHerdHandlerImpl = GetHerdHandler<database::Database, adapters::Metrics>;
@@ -235,9 +264,10 @@ type AddCowHandlerImpl =
     AddCowHandler<database::Database, adapters::CowTxtDownloader, adapters::Metrics>;
 type ChangeCowCharacterHandlerImpl =
     ChangeCowCharacterHandler<database::Database, adapters::Metrics>;
+type DeleteCowHandlerImpl = DeleteCowHandler<database::Database, adapters::Metrics>;
 type HttpDepsImpl = HttpDeps<GetHerdHandlerImpl>;
 type HttpServerImpl<'a> = http::Server<'a, HttpDepsImpl>;
-type GrpcDepsImpl = GrpcDeps<GetHerdHandlerImpl, AddCowHandlerImpl, ChangeCowCharacterHandlerImpl>;
+type GrpcDepsImpl = GrpcDeps<GetHerdHandlerImpl, AddCowHandlerImpl, ChangeCowCharacterHandlerImpl, DeleteCowHandlerImpl>;
 type GrpcServerImpl<'a> = grpc::GrpcServer<'a, GrpcDepsImpl>;
 type UpdateTimerImpl = timers::UpdateTimer<UpdateHandlerImpl>;
 
@@ -261,6 +291,8 @@ impl<'a> Service<'a> {
             AddCowHandler::new(database.clone(), downloader.clone(), metrics.clone());
         let change_cow_character_handler =
             ChangeCowCharacterHandler::new(database.clone(), metrics.clone());
+        let delete_cow_handler =
+            DeleteCowHandler::new(database.clone(), metrics.clone());
 
         let timer = timers::UpdateTimer::new(update_handler.clone());
         let http_deps = HttpDeps::new(get_herd_handler.clone(), metrics);
@@ -268,6 +300,7 @@ impl<'a> Service<'a> {
             get_herd_handler.clone(),
             add_cow_handler,
             change_cow_character_handler,
+            delete_cow_handler,
         );
         let http_server = http::Server::new(config, http_deps);
         let grpc_server = grpc::GrpcServer::new(config, grpc_deps);
