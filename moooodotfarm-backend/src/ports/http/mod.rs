@@ -68,7 +68,7 @@ where
                     .layer(trace.clone())
                     .layer(compression.clone())
                     .layer(cors.clone())
-                    .layer(axum::middleware::from_fn(redirect_hackernews)),
+                    .layer(axum::middleware::from_fn(redirect_referers_unless_whitelisted)),
             )
             .with_state(self.deps.clone());
 
@@ -82,18 +82,17 @@ where
     }
 }
 
-const HACKERNEWS_REFERRERS: &[&str] = &["news.ycombinator.com", "hckrnews.com"];
+const ALLOWED_REFERRERS: &[&str] = &["0x46.net"];
 
 const NGATE_URL: &str = "http://n-gate.com";
 
-async fn redirect_hackernews(req: Request, next: Next) -> Response {
+async fn redirect_referers_unless_whitelisted(req: Request, next: Next) -> Response {
     if let Some(referer) = req
         .headers()
         .get(header::REFERER)
         .and_then(|v| v.to_str().ok())
-        && HACKERNEWS_REFERRERS
-            .iter()
-            .any(|domain| referer.contains(domain))
+        && !referer.is_empty()
+        && !ALLOWED_REFERRERS.iter().any(|allowed| referer.contains(allowed))
     {
         return Redirect::temporary(NGATE_URL).into_response();
     }
