@@ -92,9 +92,16 @@ async fn redirect_referers_unless_whitelisted(req: Request, next: Next) -> Respo
         .get(header::REFERER)
         .and_then(|v| v.to_str().ok())
         && !referer.is_empty()
-        && !ALLOWED_REFERRERS.iter().any(|allowed| referer.contains(allowed))
     {
-        return Redirect::temporary(NGATE_URL).into_response();
+        let host_allowed = req
+            .headers()
+            .get(header::HOST)
+            .and_then(|v| v.to_str().ok())
+            .is_some_and(|host| referer.contains(host));
+
+        if !host_allowed && !ALLOWED_REFERRERS.iter().any(|allowed| referer.contains(allowed)) {
+            return Redirect::temporary(NGATE_URL).into_response();
+        }
     }
 
     next.run(req).await
