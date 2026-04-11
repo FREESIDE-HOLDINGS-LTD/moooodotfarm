@@ -5,13 +5,14 @@ use crate::errors::{Error, Result};
 use crate::{app, config};
 use askama::Template;
 use axum::extract::Request;
+use axum::middleware::Next;
 use axum::response::Html;
 use axum::{Router, ServiceExt, routing::get};
 use axum::{
     extract::Json,
     extract::State,
     http::StatusCode,
-    response::{IntoResponse, Response},
+    response::{IntoResponse, Redirect, Response},
 };
 use http::header;
 use include_dir::{Dir, include_dir};
@@ -66,7 +67,8 @@ where
                 ServiceBuilder::new()
                     .layer(trace.clone())
                     .layer(compression.clone())
-                    .layer(cors.clone()),
+                    .layer(cors.clone())
+                    .layer(axum::middleware::from_fn(redirect_hackernews)),
             )
             .with_state(self.deps.clone());
 
@@ -78,6 +80,25 @@ where
         axum::serve(listener, service).await?;
         Ok(())
     }
+}
+
+const HACKERNEWS_REFERRERS: &[&str] = &["news.ycombinator.com", "hckrnews.com"];
+
+const NGATE_URL: &str = "http://n-gate.com";
+
+async fn redirect_hackernews(req: Request, next: Next) -> Response {
+    if let Some(referer) = req
+        .headers()
+        .get(header::REFERER)
+        .and_then(|v| v.to_str().ok())
+        && HACKERNEWS_REFERRERS
+            .iter()
+            .any(|domain| referer.contains(domain))
+    {
+        return Redirect::temporary(NGATE_URL).into_response();
+    }
+
+    next.run(req).await
 }
 
 async fn handle_get_index<D>(State(deps): State<D>) -> std::result::Result<Html<String>, AppError>
