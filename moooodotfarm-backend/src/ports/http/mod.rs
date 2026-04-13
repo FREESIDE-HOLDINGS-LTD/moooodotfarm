@@ -68,7 +68,9 @@ where
                     .layer(trace.clone())
                     .layer(compression.clone())
                     .layer(cors.clone())
-                    .layer(axum::middleware::from_fn(redirect_referers_unless_whitelisted)),
+                    .layer(axum::middleware::from_fn(
+                        redirect_referers_unless_whitelisted,
+                    )),
             )
             .with_state(self.deps.clone());
 
@@ -99,7 +101,11 @@ async fn redirect_referers_unless_whitelisted(req: Request, next: Next) -> Respo
             .and_then(|v| v.to_str().ok())
             .is_some_and(|host| referer.contains(host));
 
-        if !host_allowed && !ALLOWED_REFERRERS.iter().any(|allowed| referer.contains(allowed)) {
+        if !host_allowed
+            && !ALLOWED_REFERRERS
+                .iter()
+                .any(|allowed| referer.contains(allowed))
+        {
             return Redirect::temporary(NGATE_URL).into_response();
         }
     }
