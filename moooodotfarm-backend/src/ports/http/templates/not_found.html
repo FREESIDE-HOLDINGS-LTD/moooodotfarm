@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% import "common.html" as common %}
+
+{% block title %}404 escaped{% endblock %}
+
+{% block extra_styles %}
+    .subpage-header .cow img {
+        opacity: 0.1;
+    }
+{% endblock %}
+
+{% block content %}
+    <main class="content">
+        {{ common::common_header("404 escaped", "our top Herd Uptime Engineers are on the case") }}
+    </main>
+{% endblock %}
+

@@ -147,7 +147,13 @@ async fn handle_static(uri: axum::http::Uri) -> impl IntoResponse {
             Ok(mime) => ([(header::CONTENT_TYPE, mime)], file.contents()).into_response(),
             Err(_) => (StatusCode::UNSUPPORTED_MEDIA_TYPE, "Unsupported file type").into_response(),
         },
-        None => (StatusCode::NOT_FOUND, "File not found").into_response(),
+        None => {
+            let template = NotFoundTemplate {};
+            match template.render() {
+                Ok(html) => (StatusCode::NOT_FOUND, Html(html)).into_response(),
+                Err(_) => (StatusCode::NOT_FOUND, "File not found").into_response(),
+            }
+        }
     }
 }
 
@@ -248,6 +254,10 @@ struct CvesTemplate {}
 #[derive(Template)]
 #[template(path = "redoc.html")]
 struct RedocTemplate {}
+
+#[derive(Template)]
+#[template(path = "not_found.html")]
+struct NotFoundTemplate {}
 
 struct TemplateCowName {
     name: String,
