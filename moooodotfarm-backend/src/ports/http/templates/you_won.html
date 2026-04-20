@@ -39,8 +39,8 @@
         <h1>you won!</h1>
         <h2>to collect your reward answer correctly: are you a hacker news user?</h2>
         <div class="choices">
-            <a href="http://n-gate.com" class="button yes">yes</a>
-            <a href="{{ original_path }}" class="button no" rel="noreferrer">no</a>
+            <a href="#" onclick="window.open('http://n-gate.com','_self'); return false;" class="button yes">yes</a>
+            <a href="#" onclick="window.open('{{ original_path }}','_self'); return false;"  class="button no" rel="noreferrer">no</a>
         </div>
     </main>
 {% endblock %}
