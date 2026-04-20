@@ -12,7 +12,7 @@ use axum::{
     extract::Json,
     extract::State,
     http::StatusCode,
-    response::{IntoResponse, Redirect, Response},
+    response::{IntoResponse, Response},
 };
 use http::header;
 use include_dir::{Dir, include_dir};
@@ -68,9 +68,7 @@ where
                     .layer(trace.clone())
                     .layer(compression.clone())
                     .layer(cors.clone())
-                    .layer(axum::middleware::from_fn(
-                        redirect_referers_unless_whitelisted,
-                    )),
+                    .layer(axum::middleware::from_fn(you_won)),
             )
             .with_state(self.deps.clone());
 
@@ -84,11 +82,7 @@ where
     }
 }
 
-const ALLOWED_REFERRERS: &[&str] = &["0x46.net"];
-
-const NGATE_URL: &str = "http://n-gate.com";
-
-async fn redirect_referers_unless_whitelisted(req: Request, next: Next) -> Response {
+async fn you_won(req: Request, next: Next) -> Response {
     if let Some(referer) = req
         .headers()
         .get(header::REFERER)
@@ -101,12 +95,21 @@ async fn redirect_referers_unless_whitelisted(req: Request, next: Next) -> Respo
             .and_then(|v| v.to_str().ok())
             .is_some_and(|host| referer.contains(host));
 
-        if !host_allowed
-            && !ALLOWED_REFERRERS
-                .iter()
-                .any(|allowed| referer.contains(allowed))
-        {
-            return Redirect::temporary(NGATE_URL).into_response();
+        if !host_allowed {
+            let original_path = req
+                .uri()
+                .path_and_query()
+                .map(|pq| pq.to_string())
+                .unwrap_or_else(|| "/".to_string());
+            let template = YouWonTemplate { original_path };
+            return match template.render() {
+                Ok(html) => Html(html).into_response(),
+                Err(_) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Failed to render referrer interstitial",
+                )
+                    .into_response(),
+            };
         }
     }
 
@@ -258,6 +261,12 @@ struct RedocTemplate {}
 #[derive(Template)]
 #[template(path = "not_found.html")]
 struct NotFoundTemplate {}
+
+#[derive(Template)]
+#[template(path = "you_won.html")]
+struct YouWonTemplate {
+    original_path: String,
+}
 
 struct TemplateCowName {
     name: String,

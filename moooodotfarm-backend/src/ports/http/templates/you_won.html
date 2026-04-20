@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% import "common.html" as common %}
+
+{% block title %}you won!{% endblock %}
+
+{% block extra_styles %}
+        .content {
+            margin-top: 10em;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+        }
+
+        .choices {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .button.yes {
+            background: var(--grass);
+        }
+
+        .button.no {
+            background: var(--sad-red);
+        }
+{% endblock %}
+
+{% block content %}
+    <main class="content">
+        <h1>you won!</h1>
+        <h2>to collect your reward answer correctly: are you a hacker news user?</h2>
+        <div class="choices">
+            <a href="http://n-gate.com" class="button yes">yes</a>
+            <a href="{{ original_path }}" class="button no" rel="noreferrer">no</a>
+        </div>
+    </main>
+{% endblock %}
