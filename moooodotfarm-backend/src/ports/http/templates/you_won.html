@@ -43,8 +43,16 @@
             <a href="{{ original_path }}" onclick="window.open('{{ original_path }}','_self'); return false;" class="button no js-href" rel="noreferrer">no</a>
         </div>
         <script>
-            for (const link of document.querySelectorAll(".js-href")) {
-                link.href = "#";
+            const hideLinkDestinations = () => {
+                document.querySelectorAll(".js-href").forEach((link) => {
+                    link.href = "#";
+                });
+            };
+
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", hideLinkDestinations);
+            } else {
+                hideLinkDestinations();
             }
         </script>
     </main>
