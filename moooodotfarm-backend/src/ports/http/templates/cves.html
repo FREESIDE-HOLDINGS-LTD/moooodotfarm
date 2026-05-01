@@ -66,7 +66,53 @@
 
         <section>
             <div class="cve-header">
-                <span class="cve-id">CVE-2026-?????</span>
+                <span class="cve-id">CVE-2026-00002</span>
+                <span class="cve-date">2026-05-01</span>
+                <span class="cve-severity">Severity: HIGH</span>
+                <span class="cve-status">Status: PATCHED</span>
+            </div>
+            <div class="cve-title">Click Fail</div>
+            <div class="cve-section">
+                <div class="cve-section-title">Description</div>
+                <p>
+                    The "you won" page shown to lucky visitors arriving at the farm with a <code>Referrer</code> header present placed the request's original path directly in an inline <code>onclick</code> handler as a JavaScript string literal. Although the templates HTML-escaped the value, HTML escaping is not sufficient to escape values in JavaScript strings. A crafted path containing an apostrophe was therefore able to terminate the JavaScript string literal and inject arbitrary JavaScript code into the page. A cunning attacker could set a trap for our visitors and lure them, unsuspecting, into the weeds.
+                </p>
+            </div>
+            <div class="cve-section">
+                <div class="cve-section-title">Severity &amp; Impact</div>
+                <p>
+                    Successful exploitation could result in arbitrary script execution on any subpage of moooo.farm except for the api documentation page. This could allow the attacker to perform a variety of extremely troublesome actions such as maliciously altering the names of admired cows or (what's worse) not letting the farm visitor admire the herd at all. Those actions could cause the cow in question or the farm visitor to experience troubling negative emotions. Experiencing such emotions is unacceptable in the context of moooo.farm.
+                </p>
+            </div>
+            <div class="cve-section">
+                <div class="cve-section-title">Affected Versions</div>
+                <p>
+                    All versions from the introduction of the "you won" page up to the fix commit.
+                </p>
+            </div>
+            <div class="cve-section">
+                <div class="cve-section-title">Patched Version</div>
+                <p>
+                    Patched in commit <a href="https://github.com/FREESIDE-HOLDINGS-LTD/moooodotfarm/commit/68b481b2e0d71dbda0d161c0fe9b24439a72fde0"><code>68b481b2e0d71dbda0d161c0fe9b24439a72fde0</code></a>.
+                </p>
+            </div>
+            <div class="cve-section">
+                <div class="cve-section-title">Mitigation</div>
+                <p>
+                    The patch removed the inline <code>onclick</code> code. Click handlers are now attached via a script that reads the destination from each link's <code>href</code> property instead which is correctly escaped by the templating engine.
+                </p>
+            </div>
+            <div class="cve-section">
+                <div class="cve-section-title">Exploitation Status</div>
+                <p>
+                    As of the date of this advisory, there is no evidence that this vulnerability was ever exploited in the wild or at the farm. The issue was discovered by an expert security researcher and disclosed in confidence, which caused the highly skilled and dedicated team behind moooo.farm to spring into action and ensure the safety of the herd and the farm visitors. Thanks to the star performance of everyone involved, the vulnerability can't be exploited.
+                </p>
+            </div>
+        </section>
+
+        <section>
+            <div class="cve-header">
+                <span class="cve-id">CVE-2026-00001</span>
                 <span class="cve-date">2026-02-10</span>
                 <span class="cve-severity">Severity: HIGH</span>
                 <span class="cve-status">Status: PATCHED</span>
