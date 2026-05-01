@@ -71,9 +71,12 @@
                 <span class="cve-severity">Severity: HIGH</span>
                 <span class="cve-status">Status: PATCHED</span>
             </div>
-            <div class="cve-title">Click Fail</div>
+            <div class="cve-title">Click Fail: 100% reliable, every farm since 2026, pen escape link 47 bytes</div>
             <div class="cve-section">
                 <div class="cve-section-title">Description</div>
+                <p>
+                    Most moooo.farm CVEs need an open pen gate or a herd-specific vector. Click Fail is a straight-line logic flaw - it needs neither. The same 47-charcter link roots every moooo.farm code distribution shipped since 2026.
+                </p>
                 <p>
                     The "you won" page shown to lucky visitors arriving at the farm with a <code>Referrer</code> header present placed the request's original path directly in an inline <code>onclick</code> handler as a JavaScript string literal. Although the templates HTML-escaped the value, HTML escaping is not sufficient to escape values in JavaScript strings. A crafted path containing an apostrophe was therefore able to terminate the JavaScript string literal and inject arbitrary JavaScript code into the page. A cunning attacker could set a trap for our visitors and lure them, unsuspecting, into the weeds.
                 </p>
