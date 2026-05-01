@@ -78,6 +78,12 @@
                     Most moooo.farm CVEs need an open pen gate or a herd-specific vector. Click Fail is a straight-line logic flaw - it needs neither. The same 47-charcter link roots every moooo.farm code distribution shipped since 2026.
                 </p>
                 <p>
+                    Same link, one farm, one script injection - in one take. The same exploit link works unmodified in every single one (1) moooo.farm deployment.
+                </p>
+                <p>
+                    Click Fail requires only network access - no unprivileged local user account, no kernel debugging features, no pre-installed primitives.
+                </p>
+                <p>
                     The "you won" page shown to lucky visitors arriving at the farm with a <code>Referrer</code> header present placed the request's original path directly in an inline <code>onclick</code> handler as a JavaScript string literal. Although the templates HTML-escaped the value, HTML escaping is not sufficient to escape values in JavaScript strings. A crafted path containing an apostrophe was therefore able to terminate the JavaScript string literal and inject arbitrary JavaScript code into the page. A cunning attacker could set a trap for our visitors and lure them, unsuspecting, into the weeds.
                 </p>
             </div>
@@ -108,7 +114,10 @@
             <div class="cve-section">
                 <div class="cve-section-title">Exploitation Status</div>
                 <p>
-                    As of the date of this advisory, there is no evidence that this vulnerability was ever exploited in the wild or at the farm. The issue was discovered by an expert security researcher and disclosed in confidence, which caused the highly skilled and dedicated team behind moooo.farm to spring into action and ensure the safety of the herd and the farm visitors. Thanks to the star performance of everyone involved, the vulnerability can't be exploited.
+                    As of the date of this advisory, there is no evidence that this vulnerability was ever exploited in the wild or at the farm. The issue was discovered by an expert security researcher and disclosed in confidence, which caused the highly skilled and dedicated team behind moooo.farm to spring into action and ensure the safety of the herd and the farm visitors. Thanks to the star performance of everyone involved, the vulnerability can't be exploited at moooo.farm.
+                </p>
+                <p>
+                    our team decided to release the information about this CVE immediately without verifying that all farms had been updated as we at moooo.farm strongly believe in keeping farm managers on their toes - and nothing does that better than panicking and patching pens on a Friday night.
                 </p>
             </div>
         </section>
