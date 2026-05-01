@@ -121,8 +121,20 @@ where
     D: Deps,
 {
     let herd = deps.get_herd_handler().handle().await?;
+    let total = herd.cows().len();
+    let happily_grazing = herd
+        .cows()
+        .iter()
+        .filter(|c| matches!(c.status(), app::CowStatus::HappilyGrazing))
+        .count();
+    let herd_health_index = if total == 0 {
+        "N/A".to_string()
+    } else {
+        format!("{:.0}%", (happily_grazing as f64 / total as f64) * 100.0)
+    };
     let template = IndexTemplate {
         cows: herd.cows().iter().map(|v| v.into()).collect(),
+        herd_health_index,
     };
     Ok(Html(template.render()?))
 }
@@ -240,6 +252,7 @@ impl From<&app::Cow> for APICow {
 #[template(path = "index.html")]
 struct IndexTemplate {
     cows: Vec<TemplateCow>,
+    herd_health_index: String,
 }
 
 #[derive(Template)]

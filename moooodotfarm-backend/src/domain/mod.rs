@@ -291,6 +291,7 @@ impl TryFrom<&Cow> for CensoredCow {
         Self::new(value)
     }
 }
+
 pub struct CensoredHerd {
     cows: Vec<CensoredCow>,
 }
@@ -318,6 +319,7 @@ impl CensoredHerd {
         &self.cows
     }
 }
+
 pub struct CowTxt<'a> {
     content: std::borrow::Cow<'a, str>,
 }
