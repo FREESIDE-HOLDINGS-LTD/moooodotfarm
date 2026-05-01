@@ -39,11 +39,16 @@
         <h1>you won!</h1>
         <h2>to collect your reward answer correctly: are you a hacker news user?</h2>
         <div class="choices">
-            <a href="http://n-gate.com" onclick="window.open('http://n-gate.com','_self'); return false;" class="button yes js-href">yes</a>
-            <a href="{{ original_path }}" onclick="window.open('{{ original_path }}','_self'); return false;" class="button no js-href" rel="noreferrer">no</a>
+            <a href="http://n-gate.com" class="button yes js-href">yes</a>
+            <a href="{{ original_path }}" class="button no js-href" rel="noreferrer">no</a>
         </div>
         <script>
             for (const link of document.querySelectorAll(".js-href")) {
+                const url = link.href;
+                link.onclick = function () {
+                    window.open(url, '_self');
+                    return false;
+                };
                 link.href = "#";
             }
         </script>
