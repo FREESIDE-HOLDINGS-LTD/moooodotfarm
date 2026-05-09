@@ -125,8 +125,19 @@ where
         Some(v) => format!("{:.0}%", v),
         None => "N/A".to_string(),
     };
+    let mut cows: Vec<&app::Cow> = herd.cows().iter().collect();
+    cows.sort_by(|a, b| {
+        b.is_new().cmp(&a.is_new()).then_with(|| {
+            match (a.name(), b.name()) {
+                (crate::domain::Name::Censored(_), crate::domain::Name::Censored(_)) => std::cmp::Ordering::Equal,
+                (crate::domain::Name::Censored(_), crate::domain::Name::Visible(_)) => std::cmp::Ordering::Greater,
+                (crate::domain::Name::Visible(_), crate::domain::Name::Censored(_)) => std::cmp::Ordering::Less,
+                (crate::domain::Name::Visible(a), crate::domain::Name::Visible(b)) => a.cmp(b),
+            }
+        })
+    });
     let template = IndexTemplate {
-        cows: herd.cows().iter().map(|v| v.into()).collect(),
+        cows: cows.iter().map(|v| (*v).into()).collect(),
         herd_health_index,
     };
     Ok(Html(template.render()?))

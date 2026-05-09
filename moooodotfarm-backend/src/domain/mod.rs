@@ -303,18 +303,9 @@ impl CensoredHerd {
     }
 
     fn guard_against_side_channel_attacks(cows: &mut [CensoredCow]) {
-        // we could rely on implementing Ord for VisibleName, but we want to be explicit here.
-        // this type is supposed guard against sidechannel attacks and if someone ever changes
-        // Ord for VisibleName this could lead to accidentally removing this safeguard
-        let mut rng = rand::thread_rng();
-        cows.shuffle(&mut rng);
-        cows.sort_by(|a, b| match (a.name(), b.name()) {
-            (Name::Censored(_), Name::Censored(_)) => std::cmp::Ordering::Equal,
-            (Name::Censored(_), Name::Visible(_)) => std::cmp::Ordering::Greater,
-            (Name::Visible(_), Name::Censored(_)) => std::cmp::Ordering::Less,
-            (Name::Visible(a), Name::Visible(b)) => a.cmp(b),
-        });
+        cows.shuffle(&mut rand::thread_rng());
     }
+
     pub fn cows(&self) -> &[CensoredCow] {
         &self.cows
     }
