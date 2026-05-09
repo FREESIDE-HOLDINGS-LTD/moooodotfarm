@@ -219,6 +219,8 @@ struct APICow {
     name: String,
     character: String,
     last_seen: Option<String>,
+    status: String,
+    is_new: bool,
 }
 
 const DT_FORMAT: &str = "%Y-%m-%d %H:%M:%S %z";
@@ -233,10 +235,17 @@ impl From<&app::Cow> for APICow {
             crate::domain::Character::Brave => "brave".to_string(),
             crate::domain::Character::Shy => "shy".to_string(),
         };
+        let status_str = match value.status() {
+            app::CowStatus::HappilyGrazing => "happily-grazing",
+            app::CowStatus::RanAway => "ran-away",
+            app::CowStatus::HaveNotCheckedYet => "have-not-checked-yet",
+        };
         Self {
             name: name_str,
             character: character_str,
             last_seen: value.last_seen().map(|dt| dt.format(DT_FORMAT)),
+            status: status_str.to_string(),
+            is_new: value.is_new(),
         }
     }
 }
@@ -310,9 +319,6 @@ struct TemplateCow {
 lazy_static::lazy_static! {
     static ref RECENTLY_SEEN_THRESHOLD: crate::domain::time::Duration =
         crate::domain::time::Duration::new_from_hours(2);
-
-    static ref NEW_THRESHOLD: crate::domain::time::Duration =
-        crate::domain::time::Duration::new_from_days(14);
 }
 
 impl From<&app::Cow> for TemplateCow {
@@ -329,10 +335,7 @@ impl From<&app::Cow> for TemplateCow {
                 }
             })
             .unwrap_or_else(|| "never".to_string());
-        let is_new = value
-            .first_seen()
-            .map(|v| &now - v < *NEW_THRESHOLD)
-            .unwrap_or(false);
+        let is_new = value.is_new();
 
         Self {
             name_with_kind: value.name().into(),

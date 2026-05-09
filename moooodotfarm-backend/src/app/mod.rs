@@ -165,6 +165,8 @@ impl TryFrom<domain::CensoredHerd> for Herd {
     }
 }
 
+static NEW_THRESHOLD_DAYS: u64 = 14;
+
 pub struct Cow {
     name: domain::Name,
     character: Character,
@@ -192,6 +194,13 @@ impl Cow {
 
     pub fn status(&self) -> &CowStatus {
         &self.status
+    }
+
+    pub fn is_new(&self) -> bool {
+        self.first_seen
+            .as_ref()
+            .map(|v| DateTime::now() - v < Duration::new_from_days(NEW_THRESHOLD_DAYS))
+            .unwrap_or(false)
     }
 }
 
