@@ -185,6 +185,26 @@
         .legend-dot.ran-away { background: var(--sad-red); }
         .legend-dot.have-not-checked-yet { background: var(--unknown-gray); }
 
+        .herd-health {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .herd-health-number {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: inherit;
+            line-height: 1;
+            color: var(--warm-brown);
+        }
+
+        .herd-health-label {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--warm-brown);
+            margin-top: 0.3rem;
+        }
+
         @media (max-width: 600px) {
             .cow-hero { width: 150px; }
             .cow-item { padding: 0.8rem 1rem; }
@@ -203,6 +223,11 @@
     </header>
 
     <main class="content">
+        <div class="herd-health">
+            <div class="herd-health-number">{{ herd_health_index }}</div>
+            <div class="herd-health-label">herd health index</div>
+        </div>
+
         <p class="herd-subtitle">all known cow.txt files and their status</p>
 
         <div class="legend">

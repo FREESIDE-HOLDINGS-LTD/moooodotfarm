@@ -137,6 +137,19 @@ impl Herd {
     pub fn cows(&self) -> &[Cow] {
         &self.cows
     }
+
+    pub fn health_index(&self) -> Option<f64> {
+        let total = self.cows.len();
+        if total == 0 {
+            return None;
+        }
+        let happily_grazing = self
+            .cows
+            .iter()
+            .filter(|c| matches!(c.status(), CowStatus::HappilyGrazing))
+            .count();
+        Some((happily_grazing as f64 / total as f64) * 100.0)
+    }
 }
 
 impl TryFrom<domain::CensoredHerd> for Herd {
