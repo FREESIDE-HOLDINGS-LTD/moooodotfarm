@@ -200,7 +200,7 @@ impl Cow {
         self.first_seen
             .as_ref()
             .map(|v| DateTime::now() - v < Duration::new_from_days(NEW_THRESHOLD_DAYS))
-            .unwrap_or(false)
+            .unwrap_or(true)
     }
 }
 
@@ -262,4 +262,56 @@ macro_rules! record_application_handler_call {
         );
         result
     }};
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::domain;
+    use crate::domain::time::Duration;
+
+    fn make_cow(first_seen: Option<DateTime>) -> Cow {
+        let name = domain::VisibleName::new("https://example.com/cow.txt").unwrap();
+        let domain_cow =
+            domain::Cow::new_from_history(name, domain::Character::Brave, first_seen, None, None);
+        let censored = domain::CensoredCow::new(&domain_cow).unwrap();
+        Cow::try_from(&censored).unwrap()
+    }
+
+    #[test]
+    fn test_is_new() {
+        struct TestCase {
+            name: &'static str,
+            first_seen: Option<DateTime>,
+            expected: bool,
+        }
+
+        let test_cases = [
+            TestCase {
+                name: "never checked",
+                first_seen: None,
+                expected: true,
+            },
+            TestCase {
+                name: "first seen recently",
+                first_seen: Some(DateTime::now() - Duration::new_from_days(1)),
+                expected: true,
+            },
+            TestCase {
+                name: "first seen long ago",
+                first_seen: Some(DateTime::now() - Duration::new_from_days(NEW_THRESHOLD_DAYS + 1)),
+                expected: false,
+            },
+        ];
+
+        for test_case in &test_cases {
+            let cow = make_cow(test_case.first_seen.clone());
+            assert_eq!(
+                cow.is_new(),
+                test_case.expected,
+                "failed for: {}",
+                test_case.name
+            );
+        }
+    }
 }
