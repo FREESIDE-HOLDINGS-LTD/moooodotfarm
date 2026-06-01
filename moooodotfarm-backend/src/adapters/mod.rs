@@ -14,6 +14,8 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
+const USER_AGENT: &str = "moooodotfarm (+https://moooo.farm)";
+
 pub struct ConfigLoader {
     path: PathBuf,
 }
@@ -166,24 +168,27 @@ fn cow_status_as_str(status: &app::CowStatus) -> &'static str {
 }
 
 #[derive(Clone)]
-pub struct CowTxtDownloader {}
-
-impl Default for CowTxtDownloader {
-    fn default() -> Self {
-        Self::new()
-    }
+pub struct CowTxtDownloader {
+    client: reqwest::Client,
 }
 
 impl CowTxtDownloader {
-    pub fn new() -> Self {
-        Self {}
+    pub fn new() -> Result<Self> {
+        let client = reqwest::Client::builder().user_agent(USER_AGENT).build()?;
+        Ok(Self { client })
     }
 }
 
 #[async_trait]
 impl app::CowTxtDownloader for CowTxtDownloader {
     async fn download(&self, name: &VisibleName) -> Result<CowTxt<'_>> {
-        let cow_body = reqwest::get(name.url().to_string()).await?.text().await?;
+        let cow_body = self
+            .client
+            .get(name.url().to_string())
+            .send()
+            .await?
+            .text()
+            .await?;
         CowTxt::new(cow_body)
     }
 }

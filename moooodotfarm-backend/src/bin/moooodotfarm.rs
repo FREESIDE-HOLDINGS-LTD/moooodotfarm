@@ -287,7 +287,7 @@ impl<'a> Service<'a> {
         let metrics = adapters::Metrics::new()?;
 
         let database = database::Database::new(config.database_path())?;
-        let downloader = adapters::CowTxtDownloader::new();
+        let downloader = adapters::CowTxtDownloader::new()?;
 
         let update_handler =
             UpdateHandler::new(database.clone(), downloader.clone(), metrics.clone());
