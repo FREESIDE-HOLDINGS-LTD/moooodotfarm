@@ -599,10 +599,7 @@ mod tests {
             NameComponentsTestCase {
                 input: "https://example.com/cow.txt",
                 character: Character::Shy,
-                expected: vec![
-                    (None, "https://*******.com"),
-                    (None, "/cow.txt"),
-                ],
+                expected: vec![(None, "https://*******.com"), (None, "/cow.txt")],
             },
         ];
 
