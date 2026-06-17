@@ -285,14 +285,10 @@ impl NameComponents {
     }
 
     fn split(url: &str) -> (String, String) {
-        if let Some(scheme_end) = url.find("://") {
-            let authority_start = scheme_end + 3;
-            if let Some(path_offset) = url[authority_start..].find(PATH_SEPARATOR) {
-                let path_start = authority_start + path_offset;
-                return (url[..path_start].to_string(), url[path_start..].to_string());
-            }
+        match url.strip_suffix(COW_SUFFIX) {
+            Some(base) => (base.to_string(), COW_SUFFIX.to_string()),
+            None => (url.to_string(), String::new()),
         }
-        (url.to_string(), String::new())
     }
 
     pub fn components(&self) -> &[NameComponent] {
@@ -578,14 +574,25 @@ mod tests {
                 ],
             },
             NameComponentsTestCase {
+                input: "https://example.com/~someuser/cow.txt",
+                character: Character::Brave,
+                expected: vec![
+                    (
+                        Some("https://example.com/~someuser"),
+                        "https://example.com/~someuser",
+                    ),
+                    (Some("https://example.com/~someuser/cow.txt"), "/cow.txt"),
+                ],
+            },
+            NameComponentsTestCase {
                 input: "https://example.com/path/to/cow.txt",
                 character: Character::Brave,
                 expected: vec![
-                    (Some("https://example.com"), "https://example.com"),
                     (
-                        Some("https://example.com/path/to/cow.txt"),
-                        "/path/to/cow.txt",
+                        Some("https://example.com/path/to"),
+                        "https://example.com/path/to",
                     ),
+                    (Some("https://example.com/path/to/cow.txt"), "/cow.txt"),
                 ],
             },
             NameComponentsTestCase {
@@ -597,9 +604,9 @@ mod tests {
                 ],
             },
             NameComponentsTestCase {
-                input: "https://example.com/cow.txt",
+                input: "https://example.com/~someuser/cow.txt",
                 character: Character::Shy,
-                expected: vec![(None, "https://*******.com"), (None, "/cow.txt")],
+                expected: vec![(None, "https://*******.com/*********"), (None, "/cow.txt")],
             },
         ];
 
