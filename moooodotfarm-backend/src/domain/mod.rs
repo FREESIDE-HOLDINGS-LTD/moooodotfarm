@@ -238,6 +238,69 @@ impl Name {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NameComponent {
+    link: Option<String>,
+    text: String,
+}
+
+impl NameComponent {
+    pub fn new(link: Option<String>, text: impl Into<String>) -> Self {
+        Self {
+            link,
+            text: text.into(),
+        }
+    }
+
+    pub fn link(&self) -> Option<&str> {
+        self.link.as_deref()
+    }
+
+    pub fn text(&self) -> &str {
+        &self.text
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NameComponents {
+    components: Vec<NameComponent>,
+}
+
+impl NameComponents {
+    pub fn new(name: &Name) -> Self {
+        let (url, linkable) = match name {
+            Name::Visible(v) => (v.url().to_string(), true),
+            Name::Censored(c) => (c.url().to_string(), false),
+        };
+
+        let (base_url, path) = Self::split(&url);
+        let base_link = linkable.then(|| base_url.clone());
+        let cow_link = linkable.then(|| url.clone());
+
+        let mut components = vec![NameComponent::new(base_link, base_url)];
+        if !path.is_empty() {
+            components.push(NameComponent::new(cow_link, path));
+        }
+
+        Self { components }
+    }
+
+    fn split(url: &str) -> (String, String) {
+        if let Some(scheme_end) = url.find("://") {
+            let authority_start = scheme_end + 3;
+            if let Some(path_offset) = url[authority_start..].find(PATH_SEPARATOR) {
+                let path_start = authority_start + path_offset;
+                return (url[..path_start].to_string(), url[path_start..].to_string());
+            }
+        }
+        (url.to_string(), String::new())
+    }
+
+    pub fn components(&self) -> &[NameComponent] {
+        &self.components
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Character {
     Brave,
     Shy,
@@ -491,6 +554,70 @@ mod tests {
             };
             assert_eq!(
                 actual_url, test_case.expected,
+                "Failed for input: {}",
+                test_case.input
+            );
+        }
+    }
+
+    #[test]
+    fn test_name_components() {
+        struct NameComponentsTestCase {
+            input: &'static str,
+            character: Character,
+            expected: Vec<(Option<&'static str>, &'static str)>,
+        }
+
+        let test_cases = vec![
+            NameComponentsTestCase {
+                input: "https://0x46.net/cow.txt",
+                character: Character::Brave,
+                expected: vec![
+                    (Some("https://0x46.net"), "https://0x46.net"),
+                    (Some("https://0x46.net/cow.txt"), "/cow.txt"),
+                ],
+            },
+            NameComponentsTestCase {
+                input: "https://example.com/path/to/cow.txt",
+                character: Character::Brave,
+                expected: vec![
+                    (Some("https://example.com"), "https://example.com"),
+                    (
+                        Some("https://example.com/path/to/cow.txt"),
+                        "/path/to/cow.txt",
+                    ),
+                ],
+            },
+            NameComponentsTestCase {
+                input: "https://example.com:8080/cow.txt",
+                character: Character::Brave,
+                expected: vec![
+                    (Some("https://example.com:8080"), "https://example.com:8080"),
+                    (Some("https://example.com:8080/cow.txt"), "/cow.txt"),
+                ],
+            },
+            NameComponentsTestCase {
+                input: "https://example.com/cow.txt",
+                character: Character::Shy,
+                expected: vec![
+                    (None, "https://*******.com"),
+                    (None, "/cow.txt"),
+                ],
+            },
+        ];
+
+        for test_case in test_cases {
+            let visible_name = VisibleName::new(test_case.input.to_string()).unwrap();
+            let cow = Cow::new(visible_name, test_case.character);
+            let name = Name::new(&cow).unwrap();
+            let components = NameComponents::new(&name);
+            let actual: Vec<(Option<&str>, &str)> = components
+                .components()
+                .iter()
+                .map(|c| (c.link(), c.text()))
+                .collect();
+            assert_eq!(
+                actual, test_case.expected,
                 "Failed for input: {}",
                 test_case.input
             );

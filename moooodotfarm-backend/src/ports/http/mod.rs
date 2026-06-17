@@ -301,33 +301,31 @@ struct YouWonTemplate {
 }
 
 struct TemplateCowName {
-    name: String,
-    kind: TemplateCowNameKind,
+    components: Vec<TemplateNameComponent>,
+}
+
+struct TemplateNameComponent {
+    link: Option<String>,
+    text: String,
 }
 
 impl From<&crate::domain::Name> for TemplateCowName {
     fn from(value: &crate::domain::Name) -> Self {
-        match value {
-            crate::domain::Name::Visible(v) => Self {
-                name: v.url().to_string(),
-                kind: TemplateCowNameKind::Visible,
-            },
-            crate::domain::Name::Censored(c) => Self {
-                name: c.url().to_string(),
-                kind: TemplateCowNameKind::Censored,
-            },
+        Self {
+            components: crate::domain::NameComponents::new(value)
+                .components()
+                .iter()
+                .map(|c| TemplateNameComponent {
+                    link: c.link().map(|l| l.to_string()),
+                    text: c.text().to_string(),
+                })
+                .collect(),
         }
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TemplateCowNameKind {
-    Visible,
-    Censored,
-}
-
 struct TemplateCow {
-    name_with_kind: TemplateCowName,
+    name: TemplateCowName,
     last_seen: String,
     status: CowStatus,
     is_new: bool,
@@ -355,7 +353,7 @@ impl From<&app::Cow> for TemplateCow {
         let is_new = value.is_new();
 
         Self {
-            name_with_kind: value.name().into(),
+            name: value.name().into(),
             last_seen: last_seen_str,
             status: value.status().into(),
             is_new,

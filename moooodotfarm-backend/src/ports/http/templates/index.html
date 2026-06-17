@@ -106,6 +106,19 @@
             color: var(--grass-dark);
         }
 
+        .cow-name-part {
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .cow-name-part:last-child {
+            color: var(--warm-brown);
+        }
+
+        a.cow-name-part:hover {
+            color: var(--grass-dark);
+        }
+
         .cow-meta {
             font-size: 0.9rem;
             color: var(--warm-brown);
@@ -252,12 +265,16 @@
                         <img src="/cow.png" alt="cow">
                     </div>
                     <div class="cow-info">
-                        {% match cow.name_with_kind.kind %}
-                            {% when TemplateCowNameKind::Visible %}
-                                <a href="{{ cow.name_with_kind.name }}" target="_blank" rel="noopener" class="cow-name">{{ cow.name_with_kind.name }}</a>
-                            {% when TemplateCowNameKind::Censored %}
-                                <div class="cow-name">{{ cow.name_with_kind.name }}</div>
-                        {% endmatch %}
+                        <span class="cow-name">
+                        {%- for component in cow.name.components -%}
+                            {%- match component.link -%}
+                                {%- when Some with (link) -%}
+                                    <a href="{{ link }}" target="_blank" rel="noopener" class="cow-name-part">{{ component.text }}</a>
+                                {%- when None -%}
+                                    <span class="cow-name-part">{{ component.text }}</span>
+                            {%- endmatch -%}
+                        {%- endfor -%}
+                        </span>
                         <div class="cow-meta">last seen: {{ cow.last_seen }}</div>
                     </div>
                     {% if cow.is_new %}
