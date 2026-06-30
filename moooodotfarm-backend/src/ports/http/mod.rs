@@ -142,9 +142,22 @@ where
                 (crate::domain::Name::Visible(a), crate::domain::Name::Visible(b)) => a.cmp(b),
             })
     });
+    let mut happily_grazing_count = 0;
+    let mut ran_away_count = 0;
+    let mut have_not_checked_yet_count = 0;
+    for cow in &cows {
+        match cow.status() {
+            app::CowStatus::HappilyGrazing => happily_grazing_count += 1,
+            app::CowStatus::RanAway => ran_away_count += 1,
+            app::CowStatus::HaveNotCheckedYet => have_not_checked_yet_count += 1,
+        }
+    }
     let template = IndexTemplate {
         cows: cows.iter().map(|v| (*v).into()).collect(),
         herd_health_index,
+        happily_grazing_count,
+        ran_away_count,
+        have_not_checked_yet_count,
     };
     Ok(Html(template.render()?))
 }
@@ -272,6 +285,9 @@ impl From<&app::Cow> for APICow {
 struct IndexTemplate {
     cows: Vec<TemplateCow>,
     herd_health_index: String,
+    happily_grazing_count: usize,
+    ran_away_count: usize,
+    have_not_checked_yet_count: usize,
 }
 
 #[derive(Template)]
