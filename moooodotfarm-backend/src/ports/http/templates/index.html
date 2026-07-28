@@ -55,6 +55,12 @@
             gap: 0.8rem;
         }
 
+        .cow-list[data-filter="happily-grazing"] .cow-item:not(.happily-grazing),
+        .cow-list[data-filter="ran-away"] .cow-item:not(.ran-away),
+        .cow-list[data-filter="have-not-checked-yet"] .cow-item:not(.have-not-checked-yet) {
+            display: none;
+        }
+
         .cow-item {
             background: white;
             border-radius: 16px;
@@ -186,6 +192,21 @@
             gap: 0.5rem;
             font-size: 0.95rem;
             color: var(--warm-brown);
+            background: none;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 0.2rem 0.6rem;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .legend-item:hover,
+        .legend-item.active {
+            border-color: var(--grass-light);
+        }
+
+        .legend-item.active {
+            background: white;
         }
 
         .legend-dot {
@@ -244,23 +265,17 @@
         <p class="herd-subtitle">all known cow.txt files and their status</p>
 
         <div class="legend">
-            <div class="legend-item">
-                <div class="legend-dot happily-grazing"></div>
-                <span>happily grazing ({{ happily_grazing_count }})</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-dot ran-away"></div>
-                <span>ran away ({{ ran_away_count }})</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-dot have-not-checked-yet"></div>
-                <span>wasn't checked yet ({{ have_not_checked_yet_count }})</span>
-            </div>
+            {% for entry in legend %}
+                <button type="button" class="legend-item" data-status="{{ entry.status }}">
+                    <div class="legend-dot {{ entry.status }}"></div>
+                    <span>{{ entry.label }} ({{ entry.count }})</span>
+                </button>
+            {% endfor %}
         </div>
 
         <ul class="cow-list" id="cowList">
             {% for cow in cows %}
-                <li class="cow-item ">
+                <li class="cow-item {{ cow.status }}">
                     <div class="cow-icon {{ cow.status }}">
                         <img src="/cow.png" alt="cow">
                     </div>
@@ -299,5 +314,15 @@
                 cowHero.classList.add('flipped');
             }
         }
+
+        const cowList = document.getElementById('cowList');
+        const legendItems = document.querySelectorAll('.legend-item');
+        legendItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const active = !item.classList.contains('active');
+                legendItems.forEach(other => other.classList.toggle('active', other === item && active));
+                cowList.dataset.filter = active ? item.dataset.status : '';
+            });
+        });
     </script>
 {% endblock %}
