@@ -142,22 +142,22 @@ where
                 (crate::domain::Name::Visible(a), crate::domain::Name::Visible(b)) => a.cmp(b),
             })
     });
-    let mut happily_grazing_count = 0;
-    let mut ran_away_count = 0;
-    let mut have_not_checked_yet_count = 0;
-    for cow in &cows {
-        match cow.status() {
-            app::CowStatus::HappilyGrazing => happily_grazing_count += 1,
-            app::CowStatus::RanAway => ran_away_count += 1,
-            app::CowStatus::HaveNotCheckedYet => have_not_checked_yet_count += 1,
-        }
-    }
+    let cows: Vec<TemplateCow> = cows.iter().map(|v| (*v).into()).collect();
+    let legend = app::CowStatus::all_variants()
+        .iter()
+        .map(|v| {
+            let status = CowStatus::from(v);
+            LegendEntry {
+                label: status.label(),
+                count: cows.iter().filter(|c| c.status == status).count(),
+                status,
+            }
+        })
+        .collect();
     let template = IndexTemplate {
-        cows: cows.iter().map(|v| (*v).into()).collect(),
+        cows,
+        legend,
         herd_health_index,
-        happily_grazing_count,
-        ran_away_count,
-        have_not_checked_yet_count,
     };
     Ok(Html(template.render()?))
 }
@@ -284,10 +284,14 @@ impl From<&app::Cow> for APICow {
 #[template(path = "index.html")]
 struct IndexTemplate {
     cows: Vec<TemplateCow>,
+    legend: Vec<LegendEntry>,
     herd_health_index: String,
-    happily_grazing_count: usize,
-    ran_away_count: usize,
-    have_not_checked_yet_count: usize,
+}
+
+struct LegendEntry {
+    status: CowStatus,
+    label: &'static str,
+    count: usize,
 }
 
 #[derive(Template)]
@@ -377,10 +381,21 @@ impl From<&app::Cow> for TemplateCow {
     }
 }
 
+#[derive(PartialEq)]
 pub enum CowStatus {
     HappilyGrazing,
     RanAway,
     HaveNotCheckedYet,
+}
+
+impl CowStatus {
+    fn label(&self) -> &'static str {
+        match self {
+            CowStatus::HappilyGrazing => "happily grazing",
+            CowStatus::RanAway => "ran away",
+            CowStatus::HaveNotCheckedYet => "wasn't checked yet",
+        }
+    }
 }
 
 impl From<&app::CowStatus> for CowStatus {
